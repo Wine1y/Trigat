@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Wine1y/trigat/gui"
+	"github.com/Wine1y/trigat/gui/sc_window/settings"
 	"github.com/Wine1y/trigat/utils"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -146,6 +147,10 @@ func (tool SelectionTool) CropScreenshot(surface *sdl.Surface) *sdl.Surface {
 		return croppedSurface
 	}
 	return surface
+}
+
+func (tool SelectionTool) ToolSettings() []settings.ToolSetting {
+	return nil
 }
 
 type selectionTooltip struct {

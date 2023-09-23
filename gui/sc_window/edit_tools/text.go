@@ -5,6 +5,7 @@ import (
 	"unicode"
 
 	"github.com/Wine1y/trigat/gui"
+	"github.com/Wine1y/trigat/gui/sc_window/settings"
 	"github.com/Wine1y/trigat/utils"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -101,6 +102,10 @@ func (tool TextTool) RenderScreenshot(ren *sdl.Renderer) {
 		text := utils.NewStringTexture(ren, tool.font, string(par.text), textColor)
 		text.Draw(ren, &par.textStart)
 	}
+}
+
+func (tool TextTool) ToolSettings() []settings.ToolSetting {
+	return nil
 }
 
 type paragraph struct {

@@ -37,16 +37,20 @@ func DrawFilledRectangle(ren *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
 }
 
 func DrawThickRectangle(ren *sdl.Renderer, rect *sdl.Rect, width int32, color sdl.Color) {
-	lt, rt := &sdl.Point{X: rect.X, Y: rect.Y}, &sdl.Point{X: rect.X + rect.W, Y: rect.Y}
+	lt, rt := &sdl.Point{X: rect.X, Y: rect.Y + width*2}, &sdl.Point{X: rect.X + rect.W, Y: rect.Y + width*2}
 	lb, rb := &sdl.Point{X: rect.X, Y: rect.Y + rect.H}, &sdl.Point{X: rect.X + rect.W, Y: rect.Y + rect.H}
 	DrawThickLine(ren, lt, lb, width, color)
 	DrawThickLine(ren, rt, rb, width, color)
-	DrawThickLine(ren, lt, rt, width, color)
-	DrawThickLine(ren, lb, rb, width, color)
+	DrawThickLine(ren, &sdl.Point{X: lt.X - width/2, Y: lt.Y}, &sdl.Point{X: rt.X + width/2, Y: rt.Y}, width, color)
+	DrawThickLine(ren, &sdl.Point{X: lb.X - width/2, Y: lb.Y}, &sdl.Point{X: rb.X + width/2, Y: rb.Y}, width, color)
 }
 
 func DrawFilledCircle(ren *sdl.Renderer, center *sdl.Point, radius int32, color sdl.Color) {
 	gfx.FilledCircleColor(ren, center.X, center.Y, radius, color)
+}
+
+func DrawCircle(ren *sdl.Renderer, center *sdl.Point, radius int32, color sdl.Color) {
+	gfx.AACircleColor(ren, center.X, center.Y, radius, color)
 }
 
 func CopyTexture(ren *sdl.Renderer, texture *sdl.Texture, dst *sdl.Rect, blendMode *sdl.BlendMode) {

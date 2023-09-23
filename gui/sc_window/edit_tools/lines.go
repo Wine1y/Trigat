@@ -5,12 +5,12 @@ import (
 	"math"
 
 	"github.com/Wine1y/trigat/gui"
+	"github.com/Wine1y/trigat/gui/sc_window/settings"
 	"github.com/Wine1y/trigat/utils"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 var lineColor = sdl.Color{R: 255, G: 0, B: 0, A: 255}
-var lineThickness int32 = 4
 
 //go:embed icons/line_tool.png
 var lineIconData []byte
@@ -19,16 +19,24 @@ var lineIcon = utils.LoadPNGSurface(lineIconData)
 type LinesTool struct {
 	isDragging     bool
 	isShiftPressed bool
-	lines          [][2]sdl.Point
+	lines          []line
 	lastCursorPos  *sdl.Point
+	lineThickness  int32
+	settings       []settings.ToolSetting
 }
 
 func NewLinesTool() *LinesTool {
-	return &LinesTool{
+	tool := LinesTool{
 		isDragging:     false,
 		isShiftPressed: false,
-		lines:          make([][2]sdl.Point, 0, 1),
+		lines:          make([]line, 0, 1),
+		lineThickness:  1,
 	}
+	toolSettings := []settings.ToolSetting{settings.NewSliderSetting(1, 5, func(value uint) {
+		tool.lineThickness = int32(value)
+	})}
+	tool.settings = toolSettings
+	return &tool
 }
 
 func (tool LinesTool) ToolIcon() *sdl.Surface {
@@ -43,7 +51,7 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 		}
 		tool.lastCursorPos = &sdl.Point{X: x, Y: y}
 		tool.isDragging = true
-		newLine := [2]sdl.Point{{X: x, Y: y}, {X: x, Y: y}}
+		newLine := line{points: [2]sdl.Point{{X: x, Y: y}, {X: x, Y: y}}, thickness: tool.lineThickness}
 		tool.lines = append(tool.lines, newLine)
 		return false
 	})
@@ -56,9 +64,9 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 		tool.isDragging = false
 		line := &tool.lines[len(tool.lines)-1]
 		if tool.isShiftPressed {
-			line[1] = closestStraightLinePoint(line[0], sdl.Point{X: x, Y: y})
+			line.points[1] = closestStraightLinePoint(line.points[0], sdl.Point{X: x, Y: y})
 		} else {
-			line[1] = sdl.Point{X: x, Y: y}
+			line.points[1] = sdl.Point{X: x, Y: y}
 		}
 		queue.Push(LineAction{tool: tool, lastLine: tool.lines[len(tool.lines)-1]})
 		return false
@@ -69,9 +77,9 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 			tool.lastCursorPos = &sdl.Point{X: x, Y: y}
 			line := &tool.lines[len(tool.lines)-1]
 			if tool.isShiftPressed {
-				line[1] = closestStraightLinePoint(line[0], sdl.Point{X: x, Y: y})
+				line.points[1] = closestStraightLinePoint(line.points[0], sdl.Point{X: x, Y: y})
 			} else {
-				line[1] = sdl.Point{X: x, Y: y}
+				line.points[1] = sdl.Point{X: x, Y: y}
 			}
 		}
 		return false
@@ -84,7 +92,7 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 		tool.isShiftPressed = true
 		if tool.isDragging {
 			line := &tool.lines[len(tool.lines)-1]
-			line[1] = closestStraightLinePoint(line[0], line[1])
+			line.points[1] = closestStraightLinePoint(line.points[0], line.points[1])
 		}
 		return false
 	})
@@ -96,7 +104,7 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 		tool.isShiftPressed = false
 		if tool.isDragging && tool.lastCursorPos != nil {
 			line := &tool.lines[len(tool.lines)-1]
-			line[1] = *tool.lastCursorPos
+			line.points[1] = *tool.lastCursorPos
 		}
 		return false
 	})
@@ -105,7 +113,7 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 
 func (tool LinesTool) RenderCurrentState(ren *sdl.Renderer) {
 	for _, line := range tool.lines {
-		utils.DrawThickLine(ren, &line[0], &line[1], lineThickness, lineColor)
+		utils.DrawThickLine(ren, &line.points[0], &line.points[1], line.thickness, lineColor)
 	}
 }
 
@@ -146,9 +154,18 @@ func closestStraightLinePoint(start sdl.Point, current sdl.Point) sdl.Point {
 	return *currentPoint
 }
 
+func (tool LinesTool) ToolSettings() []settings.ToolSetting {
+	return tool.settings
+}
+
+type line struct {
+	points    [2]sdl.Point
+	thickness int32
+}
+
 type LineAction struct {
 	tool     *LinesTool
-	lastLine [2]sdl.Point
+	lastLine line
 }
 
 func (action LineAction) Undo() {

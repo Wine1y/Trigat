@@ -6,6 +6,7 @@ import (
 	"unsafe"
 
 	"github.com/Wine1y/trigat/gui"
+	"github.com/Wine1y/trigat/gui/sc_window/settings"
 	"github.com/Wine1y/trigat/utils"
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -70,6 +71,10 @@ func (tool PipetteTool) RenderCurrentState(ren *sdl.Renderer) {
 }
 
 func (tool PipetteTool) RenderScreenshot(_ *sdl.Renderer) {}
+
+func (tool PipetteTool) ToolSettings() []settings.ToolSetting {
+	return nil
+}
 
 func getPixelColor(ren *sdl.Renderer, x, y int32) sdl.Color {
 	pixel := make([]uint8, 4)

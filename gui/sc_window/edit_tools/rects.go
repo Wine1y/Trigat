@@ -4,30 +4,38 @@ import (
 	_ "embed"
 
 	"github.com/Wine1y/trigat/gui"
+	"github.com/Wine1y/trigat/gui/sc_window/settings"
 	"github.com/Wine1y/trigat/utils"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 var rectColor = sdl.Color{R: 255, G: 0, B: 0, A: 255}
-var rectThickness int32 = 2
 
 //go:embed icons/rect_tool.png
 var rectIconData []byte
 var rectIcon = utils.LoadPNGSurface(rectIconData)
 
 type RectsTool struct {
-	isDragging     bool
-	isShiftPressed bool
-	rects          []sdl.Rect
-	lastCursorPos  *sdl.Point
+	isDragging          bool
+	isShiftPressed      bool
+	rects               []rect
+	lastCursorPos       *sdl.Point
+	rectBorderThickness int32
+	settings            []settings.ToolSetting
 }
 
 func NewRectsTool() *RectsTool {
-	return &RectsTool{
-		isDragging:     false,
-		isShiftPressed: false,
-		rects:          make([]sdl.Rect, 0, 1),
+	tool := RectsTool{
+		isDragging:          false,
+		isShiftPressed:      false,
+		rects:               make([]rect, 0, 1),
+		rectBorderThickness: 1,
 	}
+	toolSettings := []settings.ToolSetting{settings.NewSliderSetting(1, 10, func(value uint) {
+		tool.rectBorderThickness = int32(value)
+	})}
+	tool.settings = toolSettings
+	return &tool
 }
 
 func (tool RectsTool) ToolIcon() *sdl.Surface {
@@ -42,14 +50,17 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 			return false
 		}
 		tool.lastCursorPos = &sdl.Point{X: x, Y: y}
-		tool.rects = append(tool.rects, sdl.Rect{X: x, Y: y, W: 1, H: 1})
+		tool.rects = append(
+			tool.rects,
+			rect{sdlRect: &sdl.Rect{X: x, Y: y, W: 1, H: 1}, borderThickness: tool.rectBorderThickness},
+		)
 		tool.isDragging = true
 		return false
 	})
 
 	callbacks.MouseMove = append(callbacks.MouseMove, func(x, y int32) bool {
 		if tool.isDragging {
-			rect := &tool.rects[len(tool.rects)-1]
+			rect := tool.rects[len(tool.rects)-1].sdlRect
 			rect.W = x - rect.X
 			rect.H = y - rect.Y
 			if tool.isShiftPressed {
@@ -75,7 +86,7 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 			return false
 		}
 		if tool.isDragging {
-			utils.RectIntoSquare(&tool.rects[len(tool.rects)-1])
+			utils.RectIntoSquare(tool.rects[len(tool.rects)-1].sdlRect)
 		}
 		tool.isShiftPressed = true
 		return false
@@ -86,7 +97,7 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 			return false
 		}
 		if tool.isDragging {
-			rect := &tool.rects[len(tool.rects)-1]
+			rect := tool.rects[len(tool.rects)-1].sdlRect
 			rect.W = tool.lastCursorPos.X - rect.X
 			rect.H = tool.lastCursorPos.Y - rect.Y
 		}
@@ -99,7 +110,7 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 
 func (tool RectsTool) RenderCurrentState(ren *sdl.Renderer) {
 	for _, rect := range tool.rects {
-		utils.DrawThickRectangle(ren, &rect, rectThickness, rectColor)
+		utils.DrawThickRectangle(ren, rect.sdlRect, rect.borderThickness, rectColor)
 	}
 }
 
@@ -107,9 +118,18 @@ func (tool RectsTool) RenderScreenshot(ren *sdl.Renderer) {
 	tool.RenderCurrentState(ren)
 }
 
+func (tool RectsTool) ToolSettings() []settings.ToolSetting {
+	return tool.settings
+}
+
+type rect struct {
+	sdlRect         *sdl.Rect
+	borderThickness int32
+}
+
 type RectAction struct {
 	tool     *RectsTool
-	lastRect sdl.Rect
+	lastRect rect
 }
 
 func (action RectAction) Undo() {

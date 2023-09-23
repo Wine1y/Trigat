@@ -2,6 +2,7 @@ package editTools
 
 import (
 	"github.com/Wine1y/trigat/gui"
+	"github.com/Wine1y/trigat/gui/sc_window/settings"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -10,6 +11,7 @@ type ScreenshotEditTool interface {
 	RenderCurrentState(ren *sdl.Renderer)
 	RenderScreenshot(ren *sdl.Renderer)
 	ToolIcon() *sdl.Surface
+	ToolSettings() []settings.ToolSetting
 }
 
 type ScreenshotCropTool interface {
