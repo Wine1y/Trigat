@@ -9,8 +9,6 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-var paintColor = sdl.Color{R: 255, G: 0, B: 0, A: 255}
-
 //go:embed icons/paint_tool.png
 var paintIconData []byte
 var paintRgbIcon = utils.LoadPNGSurface(paintIconData)
@@ -20,19 +18,27 @@ type PaintTool struct {
 	strokes        []paintStroke
 	settings       []settings.ToolSetting
 	paintThickness int32
+	paintColor     sdl.Color
 }
 
 func NewPaintTool() *PaintTool {
 	tool := PaintTool{
-		isDragging:     false,
-		strokes:        make([]paintStroke, 0, 1),
-		paintThickness: 1,
+		isDragging: false,
+		strokes:    make([]paintStroke, 0, 1),
 	}
 
-	toolSettings := []settings.ToolSetting{settings.NewSliderSetting(1, 5, func(value uint) {
+	widthSlider := settings.NewSliderSetting(1, 5, func(value uint) {
 		tool.paintThickness = int32(value)
-	})}
+	})
 
+	colorPicker := settings.NewColorPickerSetting(func(color sdl.Color) {
+		tool.paintColor = color
+	})
+
+	toolSettings := []settings.ToolSetting{widthSlider, colorPicker}
+
+	tool.paintThickness = int32(widthSlider.CurrentValue())
+	tool.paintColor = colorPicker.CurrentColor()
 	tool.settings = toolSettings
 	return &tool
 }
@@ -50,7 +56,11 @@ func (tool *PaintTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 		}
 		tool.strokes = append(
 			tool.strokes,
-			paintStroke{points: []sdl.Point{{X: x, Y: y}}, thickness: tool.paintThickness},
+			paintStroke{
+				points:    []sdl.Point{{X: x, Y: y}},
+				thickness: tool.paintThickness,
+				color:     tool.paintColor,
+			},
 		)
 		tool.isDragging = true
 		return false
@@ -88,12 +98,12 @@ func (tool PaintTool) RenderCurrentState(ren *sdl.Renderer) {
 					X: stroke.points[0].X, Y: stroke.points[0].Y,
 					W: stroke.thickness, H: stroke.thickness,
 				},
-				paintColor,
+				stroke.color,
 			)
 			continue
 		}
 		for i := 0; i < len(stroke.points)-1; i++ {
-			utils.DrawThickLine(ren, &stroke.points[i], &stroke.points[i+1], stroke.thickness, paintColor)
+			utils.DrawThickLine(ren, &stroke.points[i], &stroke.points[i+1], stroke.thickness, stroke.color)
 		}
 	}
 }
@@ -106,9 +116,14 @@ func (tool PaintTool) ToolSettings() []settings.ToolSetting {
 	return tool.settings
 }
 
+func (tool PaintTool) ToolColor() *sdl.Color {
+	return &tool.paintColor
+}
+
 type paintStroke struct {
 	points    []sdl.Point
 	thickness int32
+	color     sdl.Color
 }
 
 type PaintAction struct {

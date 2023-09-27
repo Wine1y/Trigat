@@ -11,8 +11,6 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
-var textColor = sdl.Color{R: 255, G: 0, B: 0, A: 255}
-
 //go:embed icons/text_tool.png
 var textIconData []byte
 var textRgbIcon = utils.LoadPNGSurface(textIconData)
@@ -24,14 +22,25 @@ type TextTool struct {
 	paragraphs []*paragraph
 	ren        *sdl.Renderer
 	font       *ttf.Font
+	textColor  sdl.Color
+	settings   []settings.ToolSetting
 }
 
 func NewTextTool(renderer *sdl.Renderer) *TextTool {
-	return &TextTool{
+	tool := TextTool{
 		paragraphs: make([]*paragraph, 0),
 		ren:        renderer,
 		font:       utils.LoadFont(defaultFontData, 14),
 	}
+
+	colorPicker := settings.NewColorPickerSetting(func(color sdl.Color) {
+		tool.textColor = color
+	})
+
+	toolSettings := []settings.ToolSetting{colorPicker}
+	tool.textColor = colorPicker.CurrentColor()
+	tool.settings = toolSettings
+	return &tool
 }
 
 func (tool TextTool) ToolIcon() *sdl.Surface {
@@ -45,7 +54,11 @@ func (tool *TextTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet 
 		if button != sdl.BUTTON_LEFT {
 			return false
 		}
-		newParagraph := paragraph{text: make([]rune, 0, 10), textStart: sdl.Point{X: x, Y: y}}
+		newParagraph := paragraph{
+			text:      make([]rune, 0, 10),
+			textStart: sdl.Point{X: x, Y: y},
+			color:     tool.textColor,
+		}
 		tool.paragraphs = append(tool.paragraphs, &newParagraph)
 		queue.Push(TextAction{tool: tool, lastParagraph: &newParagraph})
 		return false
@@ -99,19 +112,24 @@ func (tool TextTool) RenderScreenshot(ren *sdl.Renderer) {
 		return
 	}
 	for _, par := range tool.paragraphs {
-		text := utils.NewStringTexture(ren, tool.font, string(par.text), textColor)
+		text := utils.NewStringTexture(ren, tool.font, string(par.text), par.color)
 		text.Draw(ren, &par.textStart)
 	}
 }
 
 func (tool TextTool) ToolSettings() []settings.ToolSetting {
-	return nil
+	return tool.settings
+}
+
+func (tool TextTool) ToolColor() *sdl.Color {
+	return &tool.textColor
 }
 
 type paragraph struct {
 	text          []rune
 	stringTexture *utils.StringTexture
 	textStart     sdl.Point
+	color         sdl.Color
 }
 
 func (par *paragraph) updateTexture(ren *sdl.Renderer, font *ttf.Font) {
@@ -122,7 +140,7 @@ func (par *paragraph) updateTexture(ren *sdl.Renderer, font *ttf.Font) {
 		par.stringTexture = nil
 		return
 	}
-	par.stringTexture = utils.NewStringTexture(ren, font, string(par.text), textColor)
+	par.stringTexture = utils.NewStringTexture(ren, font, string(par.text), par.color)
 }
 
 type TextAction struct {

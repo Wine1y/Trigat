@@ -19,6 +19,11 @@ func LoadPNGSurface(pngData []byte) *sdl.Surface {
 	return surface
 }
 
+func DrawPoint(ren *sdl.Renderer, point *sdl.Point, color sdl.Color) {
+	ren.SetDrawColor(color.R, color.G, color.B, color.A)
+	ren.DrawPoint(point.X, point.Y)
+}
+
 func DrawRoundedFilledRectangle(ren *sdl.Renderer, rect *sdl.Rect, radius int32, color sdl.Color) {
 	gfx.RoundedBoxColor(
 		ren,
@@ -32,17 +37,18 @@ func DrawThickLine(ren *sdl.Renderer, p1 *sdl.Point, p2 *sdl.Point, width int32,
 	gfx.ThickLineColor(ren, p1.X, p1.Y, p2.X, p2.Y, width, color)
 }
 
+func DrawRectangle(ren *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
+	gfx.RectangleColor(ren, rect.X, rect.Y, rect.X+rect.W, rect.Y+rect.H, color)
+}
+
 func DrawFilledRectangle(ren *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
 	gfx.BoxColor(ren, rect.X, rect.Y, rect.X+rect.W, rect.Y+rect.H, color)
 }
 
 func DrawThickRectangle(ren *sdl.Renderer, rect *sdl.Rect, width int32, color sdl.Color) {
-	lt, rt := &sdl.Point{X: rect.X, Y: rect.Y + width*2}, &sdl.Point{X: rect.X + rect.W, Y: rect.Y + width*2}
-	lb, rb := &sdl.Point{X: rect.X, Y: rect.Y + rect.H}, &sdl.Point{X: rect.X + rect.W, Y: rect.Y + rect.H}
-	DrawThickLine(ren, lt, lb, width, color)
-	DrawThickLine(ren, rt, rb, width, color)
-	DrawThickLine(ren, &sdl.Point{X: lt.X - width/2, Y: lt.Y}, &sdl.Point{X: rt.X + width/2, Y: rt.Y}, width, color)
-	DrawThickLine(ren, &sdl.Point{X: lb.X - width/2, Y: lb.Y}, &sdl.Point{X: rb.X + width/2, Y: rb.Y}, width, color)
+	for r := int32(0); r < width; r++ {
+		DrawRectangle(ren, &sdl.Rect{X: rect.X - r/2, Y: rect.Y - r/2, W: rect.W + r, H: rect.H + r}, color)
+	}
 }
 
 func DrawFilledCircle(ren *sdl.Renderer, center *sdl.Point, radius int32, color sdl.Color) {
@@ -51,6 +57,12 @@ func DrawFilledCircle(ren *sdl.Renderer, center *sdl.Point, radius int32, color 
 
 func DrawCircle(ren *sdl.Renderer, center *sdl.Point, radius int32, color sdl.Color) {
 	gfx.AACircleColor(ren, center.X, center.Y, radius, color)
+}
+
+func DrawThickCircle(ren *sdl.Renderer, center *sdl.Point, radius int32, width int32, color sdl.Color) {
+	for r := radius; r >= radius-width; r-- {
+		DrawCircle(ren, center, r, color)
+	}
 }
 
 func CopyTexture(ren *sdl.Renderer, texture *sdl.Texture, dst *sdl.Rect, blendMode *sdl.BlendMode) {

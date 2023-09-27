@@ -15,7 +15,10 @@ const panelSeparatorWidth int32 = 1
 
 const panelTopMargin int32 = 20
 const panelRoundingRadius int32 = 8
-const toolSize = iconSize + (iconPadding * 2)
+const toolSize int32 = iconSize + (iconPadding * 2)
+const toolColorWidth int32 = toolSize / 4 * 3
+const toolColorHeight int32 = 2
+const toolColorPadding int32 = 6
 
 const settingsWidth int32 = 100
 const settingsShowDelayMs uint64 = 650
@@ -55,8 +58,11 @@ func NewToolsPanel(ren *sdl.Renderer) *ToolsPanel {
 		actionsQueue: editTools.NewActionsQueue(),
 		cropTool:     selectionTool,
 	}
-	rect := ren.GetViewport()
-	panel.resizePanel(rect.W, rect.H)
+	if len(metas) > 0 {
+		panel.currentTool = metas[0]
+	}
+	vp := ren.GetViewport()
+	panel.resizePanel(vp.W, vp.H)
 	return &panel
 }
 
@@ -112,6 +118,14 @@ func (panel ToolsPanel) DrawPanel(ren *sdl.Renderer) {
 			utils.DrawRoundedFilledRectangle(ren, &meta.toolBBox, panelRoundingRadius, panelActiveToolColor)
 			meta.texture.SetColorMod(0, 0, 0)
 		}
+		if toolColor := meta.tool.ToolColor(); toolColor != nil {
+			utils.DrawRoundedFilledRectangle(
+				ren,
+				meta.colorBBox,
+				2,
+				*toolColor,
+			)
+		}
 		if i != len(panel.tools)-1 {
 			utils.DrawThickLine(
 				ren,
@@ -135,18 +149,18 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 				panel.currentTool = meta
 				return true
 			}
+			if panel.hoveredTool == meta && sdl.GetTicks64()-panel.hoveredAt >= settingsShowDelayMs {
+				if click.InRect(&panel.hoveredTool.settingsBBox) {
+					panel.currentTool = meta
+				}
+			}
 		}
 		return click.InRect(panel.panelRect)
 	})
 	callbacks.MouseMove = append(callbacks.MouseMove, func(x, y int32) bool {
 		move := sdl.Point{X: x, Y: y}
 		for _, meta := range panel.tools {
-			toolRect := sdl.Rect{
-				X: meta.iconBBox.X - iconPadding,
-				Y: meta.iconBBox.Y - iconPadding,
-				W: toolSize, H: toolSize,
-			}
-			if move.InRect(&toolRect) {
+			if move.InRect(&meta.toolBBox) {
 				if panel.hoveredTool != meta {
 					panel.hoveredAt = sdl.GetTicks64()
 				}
@@ -157,7 +171,7 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 		}
 		if panel.hoveredTool != nil {
 			sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_ARROW))
-			if move.InRect(&panel.hoveredTool.settingsBBox) {
+			if move.InRect(&panel.hoveredTool.settingsBBox) && sdl.GetTicks64()-panel.hoveredAt >= settingsShowDelayMs {
 				return false
 			}
 			panel.hoveredTool = nil
@@ -204,11 +218,18 @@ func (panel *ToolsPanel) resizePanel(viewportW, viewportH int32) {
 			Y: meta.iconBBox.Y - iconPadding,
 			W: toolSize, H: toolSize,
 		}
+		if meta.tool.ToolColor() != nil {
+			meta.colorBBox = &sdl.Rect{
+				X: meta.toolBBox.X + (meta.toolBBox.W-toolColorWidth)/2,
+				Y: meta.toolBBox.Y + meta.toolBBox.H - toolColorHeight - toolColorPadding,
+				W: toolColorWidth, H: toolColorHeight,
+			}
+		}
 		var toolSettingsH int32 = 0
 		for _, setting := range meta.tool.ToolSettings() {
 			setting.SetLeftTop(&sdl.Point{
 				X: meta.toolBBox.X - (settingsWidth-meta.toolBBox.W)/2,
-				Y: meta.toolBBox.Y + meta.toolBBox.H + panelPadding,
+				Y: meta.toolBBox.Y + meta.toolBBox.H + panelPadding + toolSettingsH,
 			})
 			setting.SetWidth(settingsWidth)
 			toolSettingsH += setting.BBox().H
@@ -225,6 +246,7 @@ type toolMeta struct {
 	tool         editTools.ScreenshotEditTool
 	iconBBox     sdl.Rect
 	toolBBox     sdl.Rect
+	colorBBox    *sdl.Rect
 	settingsBBox sdl.Rect
 	texture      *sdl.Texture
 }

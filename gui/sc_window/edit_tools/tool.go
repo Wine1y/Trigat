@@ -12,6 +12,7 @@ type ScreenshotEditTool interface {
 	RenderScreenshot(ren *sdl.Renderer)
 	ToolIcon() *sdl.Surface
 	ToolSettings() []settings.ToolSetting
+	ToolColor() *sdl.Color
 }
 
 type ScreenshotCropTool interface {

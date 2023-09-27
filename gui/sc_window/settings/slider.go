@@ -19,16 +19,16 @@ var thumbOutlineColor = sdl.Color{R: 0, G: 0, B: 0, A: 255}
 
 type SliderSetting struct {
 	*DefaultSetting
-	minValue     uint
-	maxValue     uint
-	currentValue uint
-	track        sdl.Rect
-	thumb        sdl.Rect
-	isMoving     bool
-	onChange     func(value uint)
+	minValue       uint
+	maxValue       uint
+	currentValue   uint
+	track          sdl.Rect
+	thumb          sdl.Rect
+	isMoving       bool
+	onValueUpdated func(value uint)
 }
 
-func NewSliderSetting(minValue, maxValue uint, onChange func(value uint)) *SliderSetting {
+func NewSliderSetting(minValue, maxValue uint, onValueUpdated func(value uint)) *SliderSetting {
 	if minValue == 0 {
 		panic("Slider value can't be 0 or lower")
 	}
@@ -36,9 +36,9 @@ func NewSliderSetting(minValue, maxValue uint, onChange func(value uint)) *Slide
 		DefaultSetting: NewDefaultSetting(sliderHeight),
 		minValue:       minValue,
 		maxValue:       maxValue,
-		currentValue:   minValue,
+		currentValue:   (minValue + maxValue) / 2,
 		isMoving:       false,
-		onChange:       onChange,
+		onValueUpdated: onValueUpdated,
 	}
 }
 
@@ -61,6 +61,8 @@ func (setting SliderSetting) Render(ren *sdl.Renderer) {
 		thumbHeight/2,
 		thumbOutlineColor,
 	)
+
+	utils.DrawThickRectangle(ren, &setting.bbox, 1, sdl.Color{R: 0, G: 0, B: 255, A: 255})
 }
 
 func (setting *SliderSetting) SettingCallbacks() *gui.WindowCallbackSet {
@@ -135,6 +137,10 @@ func (setting *SliderSetting) updateValue(x int32) {
 	}
 	valuePerPixel := float64(setting.maxValue-setting.minValue) / float64(trackW)
 	setting.currentValue = uint(math.Round(float64(x-trackX)*valuePerPixel)) + 1
-	setting.onChange(setting.currentValue)
+	setting.onValueUpdated(setting.currentValue)
 	setting.resize()
+}
+
+func (slider SliderSetting) CurrentValue() uint {
+	return slider.currentValue
 }

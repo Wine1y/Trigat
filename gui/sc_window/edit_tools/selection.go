@@ -83,14 +83,19 @@ func (tool *SelectionTool) ToolCallbacks(_ *ActionsQueue) *gui.WindowCallbackSet
 	})
 
 	callbacks.KeyDown = append(callbacks.KeyDown, func(keysym sdl.Keysym) bool {
-		if keysym.Sym != sdl.K_LSHIFT && keysym.Sym != sdl.K_RSHIFT {
-			return false
+		if keysym.Sym == sdl.K_LSHIFT || keysym.Sym == sdl.K_RSHIFT {
+			if tool.isDragging {
+				utils.RectIntoSquare(tool.selection)
+				tool.tooltip.updateTooltip(tool.ren, tool.selection)
+			}
+			tool.isShiftPressed = true
 		}
-		if tool.isDragging {
-			utils.RectIntoSquare(tool.selection)
+		if keysym.Sym == sdl.K_a && (keysym.Mod&sdl.KMOD_CTRL != 0) {
+			vp := tool.ren.GetViewport()
+			tool.selection = &vp
 			tool.tooltip.updateTooltip(tool.ren, tool.selection)
 		}
-		tool.isShiftPressed = true
+
 		return false
 	})
 
@@ -150,6 +155,10 @@ func (tool SelectionTool) CropScreenshot(surface *sdl.Surface) *sdl.Surface {
 }
 
 func (tool SelectionTool) ToolSettings() []settings.ToolSetting {
+	return nil
+}
+
+func (tool SelectionTool) ToolColor() *sdl.Color {
 	return nil
 }
 

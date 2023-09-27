@@ -76,6 +76,10 @@ func (tool PipetteTool) ToolSettings() []settings.ToolSetting {
 	return nil
 }
 
+func (tool PipetteTool) ToolColor() *sdl.Color {
+	return nil
+}
+
 func getPixelColor(ren *sdl.Renderer, x, y int32) sdl.Color {
 	pixel := make([]uint8, 4)
 	sh := (*reflect.SliceHeader)(unsafe.Pointer(&pixel))

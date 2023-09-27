@@ -9,8 +9,6 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-var rectColor = sdl.Color{R: 255, G: 0, B: 0, A: 255}
-
 //go:embed icons/rect_tool.png
 var rectIconData []byte
 var rectIcon = utils.LoadPNGSurface(rectIconData)
@@ -21,19 +19,29 @@ type RectsTool struct {
 	rects               []rect
 	lastCursorPos       *sdl.Point
 	rectBorderThickness int32
+	rectColor           sdl.Color
 	settings            []settings.ToolSetting
 }
 
 func NewRectsTool() *RectsTool {
 	tool := RectsTool{
-		isDragging:          false,
-		isShiftPressed:      false,
-		rects:               make([]rect, 0, 1),
-		rectBorderThickness: 1,
+		isDragging:     false,
+		isShiftPressed: false,
+		rects:          make([]rect, 0, 1),
 	}
-	toolSettings := []settings.ToolSetting{settings.NewSliderSetting(1, 10, func(value uint) {
+
+	widthSlider := settings.NewSliderSetting(1, 10, func(value uint) {
 		tool.rectBorderThickness = int32(value)
-	})}
+	})
+
+	colorPicker := settings.NewColorPickerSetting(func(color sdl.Color) {
+		tool.rectColor = color
+	})
+
+	toolSettings := []settings.ToolSetting{widthSlider, colorPicker}
+
+	tool.rectBorderThickness = int32(widthSlider.CurrentValue())
+	tool.rectColor = colorPicker.CurrentColor()
 	tool.settings = toolSettings
 	return &tool
 }
@@ -52,7 +60,11 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 		tool.lastCursorPos = &sdl.Point{X: x, Y: y}
 		tool.rects = append(
 			tool.rects,
-			rect{sdlRect: &sdl.Rect{X: x, Y: y, W: 1, H: 1}, borderThickness: tool.rectBorderThickness},
+			rect{
+				sdlRect:         &sdl.Rect{X: x, Y: y, W: 1, H: 1},
+				borderThickness: tool.rectBorderThickness,
+				color:           tool.rectColor,
+			},
 		)
 		tool.isDragging = true
 		return false
@@ -110,7 +122,7 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 
 func (tool RectsTool) RenderCurrentState(ren *sdl.Renderer) {
 	for _, rect := range tool.rects {
-		utils.DrawThickRectangle(ren, rect.sdlRect, rect.borderThickness, rectColor)
+		utils.DrawThickRectangle(ren, rect.sdlRect, rect.borderThickness, rect.color)
 	}
 }
 
@@ -122,9 +134,14 @@ func (tool RectsTool) ToolSettings() []settings.ToolSetting {
 	return tool.settings
 }
 
+func (tool RectsTool) ToolColor() *sdl.Color {
+	return &tool.rectColor
+}
+
 type rect struct {
 	sdlRect         *sdl.Rect
 	borderThickness int32
+	color           sdl.Color
 }
 
 type RectAction struct {

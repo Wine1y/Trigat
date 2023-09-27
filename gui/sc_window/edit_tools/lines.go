@@ -10,8 +10,6 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-var lineColor = sdl.Color{R: 255, G: 0, B: 0, A: 255}
-
 //go:embed icons/line_tool.png
 var lineIconData []byte
 var lineIcon = utils.LoadPNGSurface(lineIconData)
@@ -22,6 +20,7 @@ type LinesTool struct {
 	lines          []line
 	lastCursorPos  *sdl.Point
 	lineThickness  int32
+	lineColor      sdl.Color
 	settings       []settings.ToolSetting
 }
 
@@ -30,11 +29,20 @@ func NewLinesTool() *LinesTool {
 		isDragging:     false,
 		isShiftPressed: false,
 		lines:          make([]line, 0, 1),
-		lineThickness:  1,
 	}
-	toolSettings := []settings.ToolSetting{settings.NewSliderSetting(1, 5, func(value uint) {
+
+	widthSlider := settings.NewSliderSetting(1, 5, func(value uint) {
 		tool.lineThickness = int32(value)
-	})}
+	})
+
+	colorPicker := settings.NewColorPickerSetting(func(color sdl.Color) {
+		tool.lineColor = color
+	})
+
+	toolSettings := []settings.ToolSetting{widthSlider, colorPicker}
+
+	tool.lineThickness = int32(widthSlider.CurrentValue())
+	tool.lineColor = colorPicker.CurrentColor()
 	tool.settings = toolSettings
 	return &tool
 }
@@ -51,7 +59,11 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 		}
 		tool.lastCursorPos = &sdl.Point{X: x, Y: y}
 		tool.isDragging = true
-		newLine := line{points: [2]sdl.Point{{X: x, Y: y}, {X: x, Y: y}}, thickness: tool.lineThickness}
+		newLine := line{
+			points:    [2]sdl.Point{{X: x, Y: y}, {X: x, Y: y}},
+			thickness: tool.lineThickness,
+			color:     tool.lineColor,
+		}
 		tool.lines = append(tool.lines, newLine)
 		return false
 	})
@@ -113,7 +125,7 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 
 func (tool LinesTool) RenderCurrentState(ren *sdl.Renderer) {
 	for _, line := range tool.lines {
-		utils.DrawThickLine(ren, &line.points[0], &line.points[1], line.thickness, lineColor)
+		utils.DrawThickLine(ren, &line.points[0], &line.points[1], line.thickness, line.color)
 	}
 }
 
@@ -158,9 +170,14 @@ func (tool LinesTool) ToolSettings() []settings.ToolSetting {
 	return tool.settings
 }
 
+func (tool LinesTool) ToolColor() *sdl.Color {
+	return &tool.lineColor
+}
+
 type line struct {
 	points    [2]sdl.Point
 	thickness int32
+	color     sdl.Color
 }
 
 type LineAction struct {
