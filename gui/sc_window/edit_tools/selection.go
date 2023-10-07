@@ -117,6 +117,7 @@ func (tool *SelectionTool) ToolCallbacks(_ *ActionsQueue) *gui.WindowCallbackSet
 		if tool.tooltip.texture != nil {
 			tool.tooltip.texture.Destroy()
 		}
+		tool.tooltip.font.Close()
 		return false
 	})
 
