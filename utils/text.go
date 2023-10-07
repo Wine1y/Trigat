@@ -17,6 +17,14 @@ func LoadFont(fontData []byte, size int) *ttf.Font {
 	return font
 }
 
+func SizeString(font *ttf.Font, text string) (int, int) {
+	w, h, err := font.SizeUTF8(text)
+	if err != nil {
+		panic(err)
+	}
+	return w, h
+}
+
 type StringTexture struct {
 	Texture    *sdl.Texture
 	TextWidth  int32
@@ -24,7 +32,7 @@ type StringTexture struct {
 }
 
 func NewStringTexture(ren *sdl.Renderer, font *ttf.Font, text string, color sdl.Color) *StringTexture {
-	surface, err := font.RenderUTF8Blended(text, color)
+	surface, err := font.RenderUTF8BlendedWrapped(text, color, 0)
 	if err != nil {
 		panic(err)
 	}

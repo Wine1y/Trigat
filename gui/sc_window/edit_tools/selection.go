@@ -171,7 +171,7 @@ type selectionTooltip struct {
 
 func (tooltip *selectionTooltip) updateTooltip(ren *sdl.Renderer, selection *sdl.Rect) {
 	text := fmt.Sprintf("%v x %v", utils.Abs(selection.W), utils.Abs(selection.H))
-	textW, textH, _ := tooltip.font.SizeUTF8(text)
+	textW, textH := utils.SizeString(tooltip.font, text)
 
 	startingPoint := sdl.Point{
 		X: selection.X,

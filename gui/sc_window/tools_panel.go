@@ -178,6 +178,17 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 		}
 		return false
 	})
+
+	callbacks.KeyDown = append(callbacks.KeyDown, func(keysym sdl.Keysym) bool {
+		switch {
+		case keysym.Sym == sdl.K_z && (keysym.Mod&sdl.KMOD_CTRL != 0 && keysym.Mod&sdl.KMOD_ALT != 0):
+			panel.RedoLastAction()
+		case keysym.Sym == sdl.K_z && (keysym.Mod&sdl.KMOD_CTRL != 0):
+			panel.UndoLastAction()
+		}
+		return false
+	})
+
 	callbacks.SizeChange = append(callbacks.SizeChange, func(w, h int32) bool {
 		panel.resizePanel(w, h)
 		return false

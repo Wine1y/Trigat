@@ -85,16 +85,8 @@ func (window *ScreenshotWindow) callbackSet() *gui.WindowCallbackSet {
 
 func (window *ScreenshotWindow) HotKeys() *hotkeys.HotKeySet {
 	exitCb := func() { window.Close() }
-	undoCb := func() {
-		window.toolsPanel.UndoLastAction()
-	}
-	redoCb := func() {
-		window.toolsPanel.RedoLastAction()
-	}
 	exitHk := hotkeys.NewHotKey(hk.KeyEscape, nil, &exitCb, nil)
-	undoHk := hotkeys.NewHotKey(hk.KeyZ, []hk.Modifier{hk.ModCtrl}, &undoCb, nil)
-	redoHk := hotkeys.NewHotKey(hk.KeyZ, []hk.Modifier{hk.ModCtrl, hk.ModAlt}, &redoCb, nil)
-	return hotkeys.NewHotKeySet(exitHk, undoHk, redoHk)
+	return hotkeys.NewHotKeySet(exitHk)
 }
 
 func (window *ScreenshotWindow) drawScreenshotBackground(ren *sdl.Renderer) {
