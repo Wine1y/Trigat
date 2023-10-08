@@ -2,6 +2,7 @@ package editTools
 
 import (
 	_ "embed"
+	"time"
 	"unicode"
 
 	"github.com/Wine1y/trigat/gui"
@@ -22,6 +23,7 @@ var cursorColor = sdl.Color{R: 255, G: 255, B: 255, A: 255}
 var selectionColor = sdl.Color{R: 0, G: 0, B: 255, A: 100}
 
 const paragraphPadding int32 = 5
+const cursorAnimationDuration time.Duration = time.Millisecond * 1250
 
 type TextTool struct {
 	paragraphs       []*utils.TextParagraph
@@ -31,6 +33,7 @@ type TextTool struct {
 	textColor        sdl.Color
 	settings         []settings.ToolSetting
 	cursorPos        int
+	cursorAnimation  *utils.Animation
 	isShiftSelecting bool
 	isMouseSelecting bool
 	selection        textSelection
@@ -85,6 +88,7 @@ func (tool *TextTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet 
 		)
 		tool.paragraphs = append(tool.paragraphs, newParagraph)
 		tool.activeParagraph = newParagraph
+		tool.cursorAnimation = utils.NewLinearAnimation(255, 0, int(gui.FPS), cursorAnimationDuration, 0, true)
 		tool.deselectText()
 		tool.moveCursor(0)
 		queue.Push(textParagraphCreatedAction{tool: tool, lastParagraph: newParagraph})
@@ -313,7 +317,11 @@ func (tool *TextTool) popFromParagraph(par *utils.TextParagraph, popFrom int, po
 }
 
 func (tool TextTool) RenderScreenshot(ren *sdl.Renderer) {
-	tool.RenderCurrentState(ren)
+	for _, par := range tool.paragraphs {
+		if par.StringTexture != nil {
+			par.StringTexture.Draw(ren, &par.TextStart)
+		}
+	}
 }
 
 func (tool TextTool) RenderCurrentState(ren *sdl.Renderer) {
@@ -344,7 +352,7 @@ func (tool TextTool) renderCursor(ren *sdl.Renderer) {
 		&sdl.Point{X: par.TextStart.X + xOffset, Y: par.TextStart.Y + yOffset},
 		&sdl.Point{X: par.TextStart.X + xOffset, Y: par.TextStart.Y + yOffset + int32(cursorH)},
 		1,
-		cursorColor,
+		sdl.Color{R: cursorColor.R, G: cursorColor.G, B: cursorColor.B, A: uint8(tool.cursorAnimation.CurrentValue())},
 	)
 }
 
