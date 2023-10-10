@@ -22,6 +22,7 @@ type LinesTool struct {
 	lineThickness  int32
 	lineColor      sdl.Color
 	settings       []settings.ToolSetting
+	DefaultScreenshotEditTool
 }
 
 func NewLinesTool() *LinesTool {
@@ -172,6 +173,11 @@ func (tool LinesTool) ToolSettings() []settings.ToolSetting {
 
 func (tool LinesTool) ToolColor() *sdl.Color {
 	return &tool.lineColor
+}
+
+func (tool *LinesTool) OnToolDeactivated() {
+	tool.isShiftPressed = false
+	tool.isDragging = false
 }
 
 type line struct {

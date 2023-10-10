@@ -21,6 +21,7 @@ type RectsTool struct {
 	rectBorderThickness int32
 	rectColor           sdl.Color
 	settings            []settings.ToolSetting
+	DefaultScreenshotEditTool
 }
 
 func NewRectsTool() *RectsTool {
@@ -136,6 +137,11 @@ func (tool RectsTool) ToolSettings() []settings.ToolSetting {
 
 func (tool RectsTool) ToolColor() *sdl.Color {
 	return &tool.rectColor
+}
+
+func (tool *RectsTool) OnToolDeactivated() {
+	tool.isShiftPressed = false
+	tool.isDragging = false
 }
 
 type rect struct {

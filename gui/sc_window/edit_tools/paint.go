@@ -19,6 +19,7 @@ type PaintTool struct {
 	settings       []settings.ToolSetting
 	paintThickness int32
 	paintColor     sdl.Color
+	DefaultScreenshotEditTool
 }
 
 func NewPaintTool() *PaintTool {
@@ -118,6 +119,10 @@ func (tool PaintTool) ToolSettings() []settings.ToolSetting {
 
 func (tool PaintTool) ToolColor() *sdl.Color {
 	return &tool.paintColor
+}
+
+func (tool *PaintTool) OnToolDeactivated() {
+	tool.isDragging = false
 }
 
 type paintStroke struct {

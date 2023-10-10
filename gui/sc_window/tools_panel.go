@@ -146,12 +146,12 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 		click := sdl.Point{X: x, Y: y}
 		for _, meta := range panel.tools {
 			if click.InRect(&meta.toolBBox) {
-				panel.currentTool = meta
+				panel.setActiveTool(meta)
 				return true
 			}
 			if panel.hoveredTool == meta && sdl.GetTicks64()-panel.hoveredAt >= settingsShowDelayMs {
 				if click.InRect(&panel.hoveredTool.settingsBBox) {
-					panel.currentTool = meta
+					panel.setActiveTool(meta)
 				}
 			}
 		}
@@ -208,6 +208,14 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 	if panel.currentTool != nil {
 		callbacks.Append(panel.currentTool.tool.ToolCallbacks(panel.actionsQueue))
 	}
+}
+
+func (panel *ToolsPanel) setActiveTool(toolMeta *toolMeta) {
+	if panel.currentTool != nil {
+		panel.currentTool.tool.OnToolDeactivated()
+	}
+	panel.currentTool = toolMeta
+	panel.currentTool.tool.OnToolActivated()
 }
 
 func (panel *ToolsPanel) resizePanel(viewportW, viewportH int32) {

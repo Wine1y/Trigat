@@ -120,7 +120,7 @@ func (par TextParagraph) GetPositionByOffset(xOffset int32, yOffset int32) int {
 		return len(par.Text)
 	}
 	lineStart, lineEnd := lines[lineNumber][0], lines[lineNumber][1]
-	w, _ := SizeString(par.Font, string(par.Text[lineStart:lineEnd+1]))
+	w, _ := SizeString(par.Font, string(par.Text[lineStart:lineEnd]))
 	if int(xOffset) >= w {
 		return lineEnd + 1
 	}

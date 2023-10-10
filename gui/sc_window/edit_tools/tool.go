@@ -13,9 +13,30 @@ type ScreenshotEditTool interface {
 	ToolIcon() *sdl.Surface
 	ToolSettings() []settings.ToolSetting
 	ToolColor() *sdl.Color
+	OnToolActivated()
+	OnToolDeactivated()
 }
 
 type ScreenshotCropTool interface {
 	ScreenshotEditTool
 	CropScreenshot(surface *sdl.Surface) *sdl.Surface
+}
+
+type DefaultScreenshotEditTool struct {
+}
+
+func (tool DefaultScreenshotEditTool) OnToolActivated() {
+
+}
+
+func (tool DefaultScreenshotEditTool) OnToolDeactivated() {
+
+}
+
+func (tool DefaultScreenshotEditTool) ToolSettings() []settings.ToolSetting {
+	return nil
+}
+
+func (tool DefaultScreenshotEditTool) ToolColor() *sdl.Color {
+	return nil
 }

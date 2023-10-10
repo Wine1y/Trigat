@@ -37,6 +37,7 @@ type TextTool struct {
 	isShiftSelecting bool
 	isMouseSelecting bool
 	selection        textSelection
+	DefaultScreenshotEditTool
 }
 
 func NewTextTool(renderer *sdl.Renderer) *TextTool {
@@ -247,6 +248,13 @@ func (tool TextTool) ToolSettings() []settings.ToolSetting {
 
 func (tool TextTool) ToolColor() *sdl.Color {
 	return &tool.textColor
+}
+
+func (tool *TextTool) OnToolDeactivated() {
+	tool.activeParagraph = nil
+	tool.selection.selected = false
+	tool.isShiftSelecting = false
+	tool.isMouseSelecting = false
 }
 
 func (tool *TextTool) moveCursor(newPos int) {

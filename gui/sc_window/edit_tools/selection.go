@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/Wine1y/trigat/gui"
-	"github.com/Wine1y/trigat/gui/sc_window/settings"
 	"github.com/Wine1y/trigat/utils"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -30,6 +29,7 @@ type SelectionTool struct {
 	lastCursorPos  *sdl.Point
 	tooltip        *selectionTooltip
 	ren            *sdl.Renderer
+	DefaultScreenshotEditTool
 }
 
 func NewSelectionTool(renderer *sdl.Renderer) *SelectionTool {
@@ -43,6 +43,11 @@ func NewSelectionTool(renderer *sdl.Renderer) *SelectionTool {
 
 func (tool SelectionTool) ToolIcon() *sdl.Surface {
 	return selectionIcon
+}
+
+func (tool *SelectionTool) OnToolDeactivated() {
+	tool.isShiftPressed = false
+	tool.isDragging = false
 }
 
 func (tool *SelectionTool) ToolCallbacks(_ *ActionsQueue) *gui.WindowCallbackSet {
@@ -153,14 +158,6 @@ func (tool SelectionTool) CropScreenshot(surface *sdl.Surface) *sdl.Surface {
 		return croppedSurface
 	}
 	return surface
-}
-
-func (tool SelectionTool) ToolSettings() []settings.ToolSetting {
-	return nil
-}
-
-func (tool SelectionTool) ToolColor() *sdl.Color {
-	return nil
 }
 
 type selectionTooltip struct {
