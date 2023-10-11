@@ -1,7 +1,7 @@
 package gui
 
 import (
-	"github.com/Wine1y/trigat/hotkeys"
+	"github.com/Wine1y/trigat/pkg/hotkeys"
 	"github.com/veandco/go-sdl2/sdl"
 )
 

@@ -3,8 +3,8 @@ package settings
 import (
 	"math"
 
-	"github.com/Wine1y/trigat/gui"
-	"github.com/Wine1y/trigat/utils"
+	"github.com/Wine1y/trigat/internal/gui"
+	"github.com/Wine1y/trigat/pkg"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -43,26 +43,26 @@ func NewSliderSetting(minValue, maxValue uint, onValueUpdated func(value uint)) 
 }
 
 func (setting SliderSetting) Render(ren *sdl.Renderer) {
-	utils.DrawRoundedFilledRectangle(
+	pkg.DrawRoundedFilledRectangle(
 		ren,
 		&setting.track,
 		trackRadius,
 		trackColor,
 	)
-	utils.DrawFilledCircle(
+	pkg.DrawFilledCircle(
 		ren,
 		&sdl.Point{X: setting.thumb.X + thumbHeight/2, Y: setting.thumb.Y + thumbHeight/2},
 		thumbHeight/2,
 		thumbFillColor,
 	)
-	utils.DrawCircle(
+	pkg.DrawCircle(
 		ren,
 		&sdl.Point{X: setting.thumb.X + thumbHeight/2, Y: setting.thumb.Y + thumbHeight/2},
 		thumbHeight/2,
 		thumbOutlineColor,
 	)
 
-	utils.DrawThickRectangle(ren, &setting.bbox, 1, sdl.Color{R: 0, G: 0, B: 255, A: 255})
+	pkg.DrawThickRectangle(ren, &setting.bbox, 1, sdl.Color{R: 0, G: 0, B: 255, A: 255})
 }
 
 func (setting *SliderSetting) SettingCallbacks() *gui.WindowCallbackSet {

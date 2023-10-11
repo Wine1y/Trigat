@@ -5,14 +5,11 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/Wine1y/trigat/gui"
-	"github.com/Wine1y/trigat/utils"
+	"github.com/Wine1y/trigat/assets"
+	"github.com/Wine1y/trigat/internal/gui"
+	"github.com/Wine1y/trigat/pkg"
 	"github.com/veandco/go-sdl2/sdl"
 )
-
-//go:embed icons/pipette_tool.png
-var pipetteIconData []byte
-var pipetteRgbIcon = utils.LoadPNGSurface(pipetteIconData)
 
 type PipetteTool struct {
 	ren        *sdl.Renderer
@@ -29,7 +26,7 @@ func NewPipetteTool(renderer *sdl.Renderer) *PipetteTool {
 }
 
 func (tool PipetteTool) ToolIcon() *sdl.Surface {
-	return pipetteRgbIcon
+	return assets.PipetteIcon
 }
 
 func (tool *PipetteTool) OnToolDeactivated() {
@@ -70,7 +67,7 @@ func (tool *PipetteTool) ToolCallbacks(_ *ActionsQueue) *gui.WindowCallbackSet {
 func (tool PipetteTool) RenderCurrentState(ren *sdl.Renderer) {
 	if tool.lastColor != nil {
 		vp := ren.GetViewport()
-		utils.DrawFilledCircle(ren, &sdl.Point{X: 55, Y: vp.H - 55}, 50, *tool.lastColor)
+		pkg.DrawFilledCircle(ren, &sdl.Point{X: 55, Y: vp.H - 55}, 50, *tool.lastColor)
 	}
 }
 

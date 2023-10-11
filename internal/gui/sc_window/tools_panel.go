@@ -1,9 +1,9 @@
 package scWindow
 
 import (
-	"github.com/Wine1y/trigat/gui"
-	editTools "github.com/Wine1y/trigat/gui/sc_window/edit_tools"
-	"github.com/Wine1y/trigat/utils"
+	"github.com/Wine1y/trigat/internal/gui"
+	editTools "github.com/Wine1y/trigat/internal/gui/sc_window/edit_tools"
+	"github.com/Wine1y/trigat/pkg"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -102,11 +102,11 @@ func (panel *ToolsPanel) RedoLastAction() {
 }
 
 func (panel ToolsPanel) DrawPanel(ren *sdl.Renderer) {
-	utils.DrawRoundedFilledRectangle(ren, panel.panelRect, panelRoundingRadius, panelBackgroundColor)
+	pkg.DrawRoundedFilledRectangle(ren, panel.panelRect, panelRoundingRadius, panelBackgroundColor)
 	for i, meta := range panel.tools {
 		meta.texture.SetColorMod(255, 255, 255)
 		if meta == panel.hoveredTool {
-			utils.DrawRoundedFilledRectangle(ren, &meta.toolBBox, panelRoundingRadius, panelHoverToolColor)
+			pkg.DrawRoundedFilledRectangle(ren, &meta.toolBBox, panelRoundingRadius, panelHoverToolColor)
 			toolSettings := panel.hoveredTool.tool.ToolSettings()
 			if len(toolSettings) > 0 && sdl.GetTicks64()-panel.hoveredAt >= settingsShowDelayMs {
 				for _, setting := range toolSettings {
@@ -115,11 +115,11 @@ func (panel ToolsPanel) DrawPanel(ren *sdl.Renderer) {
 			}
 		}
 		if meta == panel.currentTool {
-			utils.DrawRoundedFilledRectangle(ren, &meta.toolBBox, panelRoundingRadius, panelActiveToolColor)
+			pkg.DrawRoundedFilledRectangle(ren, &meta.toolBBox, panelRoundingRadius, panelActiveToolColor)
 			meta.texture.SetColorMod(0, 0, 0)
 		}
 		if toolColor := meta.tool.ToolColor(); toolColor != nil {
-			utils.DrawRoundedFilledRectangle(
+			pkg.DrawRoundedFilledRectangle(
 				ren,
 				meta.colorBBox,
 				2,
@@ -127,14 +127,14 @@ func (panel ToolsPanel) DrawPanel(ren *sdl.Renderer) {
 			)
 		}
 		if i != len(panel.tools)-1 {
-			utils.DrawThickLine(
+			pkg.DrawThickLine(
 				ren,
 				&sdl.Point{X: meta.toolBBox.X + meta.toolBBox.W + (iconMargin / 2), Y: meta.toolBBox.Y + iconPadding},
 				&sdl.Point{X: meta.toolBBox.X + meta.toolBBox.W + (iconMargin / 2), Y: meta.toolBBox.Y + meta.toolBBox.H - iconPadding},
 				panelSeparatorWidth, panelSeparatorColor,
 			)
 		}
-		utils.CopyTexture(ren, meta.texture, &meta.iconBBox, nil)
+		pkg.CopyTexture(ren, meta.texture, &meta.iconBBox, nil)
 	}
 }
 

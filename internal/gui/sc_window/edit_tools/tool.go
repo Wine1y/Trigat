@@ -1,8 +1,8 @@
 package editTools
 
 import (
-	"github.com/Wine1y/trigat/gui"
-	"github.com/Wine1y/trigat/gui/sc_window/settings"
+	"github.com/Wine1y/trigat/internal/gui"
+	"github.com/Wine1y/trigat/internal/gui/sc_window/settings"
 	"github.com/veandco/go-sdl2/sdl"
 )
 

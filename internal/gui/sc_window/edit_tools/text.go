@@ -5,19 +5,14 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/Wine1y/trigat/gui"
-	"github.com/Wine1y/trigat/gui/sc_window/settings"
-	"github.com/Wine1y/trigat/utils"
+	"github.com/Wine1y/trigat/assets"
+	"github.com/Wine1y/trigat/config"
+	"github.com/Wine1y/trigat/internal/gui"
+	"github.com/Wine1y/trigat/internal/gui/sc_window/settings"
+	"github.com/Wine1y/trigat/pkg"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
-
-//go:embed icons/text_tool.png
-var textIconData []byte
-var textRgbIcon = utils.LoadPNGSurface(textIconData)
-
-//go:embed font.ttf
-var defaultFontData []byte
 
 var cursorColor = sdl.Color{R: 255, G: 255, B: 255, A: 255}
 var selectionColor = sdl.Color{R: 0, G: 0, B: 255, A: 100}
@@ -26,14 +21,14 @@ const paragraphPadding int32 = 5
 const cursorAnimationDuration time.Duration = time.Millisecond * 1250
 
 type TextTool struct {
-	paragraphs       []*utils.TextParagraph
-	activeParagraph  *utils.TextParagraph
+	paragraphs       []*pkg.TextParagraph
+	activeParagraph  *pkg.TextParagraph
 	ren              *sdl.Renderer
 	textFont         *ttf.Font
 	textColor        sdl.Color
 	settings         []settings.ToolSetting
 	cursorPos        int
-	cursorAnimation  *utils.Animation
+	cursorAnimation  *pkg.Animation
 	isShiftSelecting bool
 	isMouseSelecting bool
 	selection        textSelection
@@ -42,9 +37,9 @@ type TextTool struct {
 
 func NewTextTool(renderer *sdl.Renderer) *TextTool {
 	tool := TextTool{
-		paragraphs: make([]*utils.TextParagraph, 0),
+		paragraphs: make([]*pkg.TextParagraph, 0),
 		ren:        renderer,
-		textFont:   utils.LoadFont(defaultFontData, 14),
+		textFont:   assets.GetAppFont(14),
 		selection:  textSelection{start: 0, length: 0, selected: false},
 	}
 
@@ -61,7 +56,7 @@ func NewTextTool(renderer *sdl.Renderer) *TextTool {
 }
 
 func (tool TextTool) ToolIcon() *sdl.Surface {
-	return textRgbIcon
+	return assets.TextIcon
 }
 
 func (tool *TextTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet {
@@ -81,7 +76,7 @@ func (tool *TextTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet 
 				return false
 			}
 		}
-		newParagraph := utils.NewTextParagraph(
+		newParagraph := pkg.NewTextParagraph(
 			sdl.Point{X: x, Y: y},
 			tool.textColor,
 			tool.textFont,
@@ -89,7 +84,7 @@ func (tool *TextTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet 
 		)
 		tool.paragraphs = append(tool.paragraphs, newParagraph)
 		tool.activeParagraph = newParagraph
-		tool.cursorAnimation = utils.NewLinearAnimation(255, 0, int(gui.FPS), cursorAnimationDuration, 0, true)
+		tool.cursorAnimation = pkg.NewLinearAnimation(255, 0, int(config.GetAppFPS()), cursorAnimationDuration, 0, true)
 		tool.deselectText()
 		tool.moveCursor(0)
 		queue.Push(textParagraphCreatedAction{tool: tool, lastParagraph: newParagraph})
@@ -258,7 +253,7 @@ func (tool *TextTool) OnToolDeactivated() {
 }
 
 func (tool *TextTool) moveCursor(newPos int) {
-	newPos = utils.Clamp(0, newPos, len(tool.activeParagraph.Text))
+	newPos = pkg.Clamp(0, newPos, len(tool.activeParagraph.Text))
 	if tool.isShiftSelecting || tool.isMouseSelecting {
 		tool.selectText(tool.cursorPos, newPos)
 	} else {
@@ -268,7 +263,7 @@ func (tool *TextTool) moveCursor(newPos int) {
 }
 
 func (tool *TextTool) moveCursorIgnoreSelection(newPos int) {
-	newPos = utils.Clamp(0, newPos, len(tool.activeParagraph.Text))
+	newPos = pkg.Clamp(0, newPos, len(tool.activeParagraph.Text))
 	tool.cursorPos = newPos
 }
 
@@ -289,7 +284,7 @@ func (tool *TextTool) deselectText() {
 	tool.selection.start = 0
 }
 
-func (tool *TextTool) insertIntoParagraph(par *utils.TextParagraph, insertAt int, queue *ActionsQueue, text ...rune) {
+func (tool *TextTool) insertIntoParagraph(par *pkg.TextParagraph, insertAt int, queue *ActionsQueue, text ...rune) {
 	queue.Push(
 		textInsertedAction{
 			tool: tool, ren: tool.ren,
@@ -300,7 +295,7 @@ func (tool *TextTool) insertIntoParagraph(par *utils.TextParagraph, insertAt int
 	par.InsertRunes(tool.ren, insertAt, text...)
 }
 
-func (tool *TextTool) replaceInParagraph(par *utils.TextParagraph, replaceFrom int, replaceTo int, queue *ActionsQueue, newText ...rune) {
+func (tool *TextTool) replaceInParagraph(par *pkg.TextParagraph, replaceFrom int, replaceTo int, queue *ActionsQueue, newText ...rune) {
 	queue.Push(
 		textInsertedAction{
 			tool: tool, ren: tool.ren,
@@ -313,7 +308,7 @@ func (tool *TextTool) replaceInParagraph(par *utils.TextParagraph, replaceFrom i
 	par.InsertRunes(tool.ren, replaceFrom, newText...)
 }
 
-func (tool *TextTool) popFromParagraph(par *utils.TextParagraph, popFrom int, popTo int, queue *ActionsQueue) {
+func (tool *TextTool) popFromParagraph(par *pkg.TextParagraph, popFrom int, popTo int, queue *ActionsQueue) {
 	queue.Push(
 		textRemovedAction{
 			tool: tool, ren: tool.ren,
@@ -334,7 +329,7 @@ func (tool TextTool) RenderScreenshot(ren *sdl.Renderer) {
 
 func (tool TextTool) RenderCurrentState(ren *sdl.Renderer) {
 	for _, par := range tool.paragraphs {
-		utils.DrawRectangle(
+		pkg.DrawRectangle(
 			ren,
 			par.GetBBox(),
 			sdl.Color{R: 0, G: 255, B: 0, A: 255},
@@ -355,7 +350,7 @@ func (tool TextTool) renderCursor(ren *sdl.Renderer) {
 	par := tool.activeParagraph
 	xOffset, yOffset := par.GetOffsetByPosition(tool.cursorPos)
 	cursorH := par.Font.Height()
-	utils.DrawThickLine(
+	pkg.DrawThickLine(
 		ren,
 		&sdl.Point{X: par.TextStart.X + xOffset, Y: par.TextStart.Y + yOffset},
 		&sdl.Point{X: par.TextStart.X + xOffset, Y: par.TextStart.Y + yOffset + int32(cursorH)},
@@ -371,17 +366,17 @@ func (tool TextTool) renderSelection(ren *sdl.Renderer) {
 	lines := par.GetLinesBoundaries()
 	for i, line := range lines {
 		y := int32(i * selH)
-		lineSelStart := utils.Max(selStart, line[0])
-		lineSelEnd := utils.Min(selEnd, line[1]+1)
+		lineSelStart := pkg.Max(selStart, line[0])
+		lineSelEnd := pkg.Min(selEnd, line[1]+1)
 		if lineSelStart > line[1] || lineSelEnd < line[0] {
 			continue
 		}
 		selOffset := 0
 		if lineSelStart > 0 {
-			selOffset, _ = utils.SizeString(par.Font, string(par.Text[line[0]:lineSelStart]))
+			selOffset, _ = pkg.SizeString(par.Font, string(par.Text[line[0]:lineSelStart]))
 		}
-		selW, _ := utils.SizeString(par.Font, string(par.Text[lineSelStart:lineSelEnd]))
-		utils.DrawFilledRectangle(
+		selW, _ := pkg.SizeString(par.Font, string(par.Text[lineSelStart:lineSelEnd]))
+		pkg.DrawFilledRectangle(
 			ren,
 			&sdl.Rect{
 				X: par.TextStart.X + int32(selOffset),
@@ -400,12 +395,12 @@ type textSelection struct {
 }
 
 func (sel textSelection) selectionBounds() (int, int) {
-	return utils.Min(sel.start, sel.start+sel.length), utils.Max(sel.start, sel.start+sel.length)
+	return pkg.Min(sel.start, sel.start+sel.length), pkg.Max(sel.start, sel.start+sel.length)
 }
 
 type textParagraphCreatedAction struct {
 	tool          *TextTool
-	lastParagraph *utils.TextParagraph
+	lastParagraph *pkg.TextParagraph
 }
 
 func (action textParagraphCreatedAction) Undo() {
@@ -419,7 +414,7 @@ func (action textParagraphCreatedAction) Redo() {
 type textInsertedAction struct {
 	tool         *TextTool
 	ren          *sdl.Renderer
-	par          *utils.TextParagraph
+	par          *pkg.TextParagraph
 	text         []rune
 	replacedText []rune
 	insertedAt   int
@@ -448,7 +443,7 @@ func (action textInsertedAction) Redo() {
 type textRemovedAction struct {
 	tool        *TextTool
 	ren         *sdl.Renderer
-	par         *utils.TextParagraph
+	par         *pkg.TextParagraph
 	text        []rune
 	removedFrom int
 }

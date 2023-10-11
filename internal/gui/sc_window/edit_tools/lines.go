@@ -4,15 +4,12 @@ import (
 	_ "embed"
 	"math"
 
-	"github.com/Wine1y/trigat/gui"
-	"github.com/Wine1y/trigat/gui/sc_window/settings"
-	"github.com/Wine1y/trigat/utils"
+	"github.com/Wine1y/trigat/assets"
+	"github.com/Wine1y/trigat/internal/gui"
+	"github.com/Wine1y/trigat/internal/gui/sc_window/settings"
+	"github.com/Wine1y/trigat/pkg"
 	"github.com/veandco/go-sdl2/sdl"
 )
-
-//go:embed icons/line_tool.png
-var lineIconData []byte
-var lineIcon = utils.LoadPNGSurface(lineIconData)
 
 type LinesTool struct {
 	isDragging     bool
@@ -49,7 +46,7 @@ func NewLinesTool() *LinesTool {
 }
 
 func (tool LinesTool) ToolIcon() *sdl.Surface {
-	return lineIcon
+	return assets.LineIcon
 }
 
 func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet {
@@ -126,7 +123,7 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 
 func (tool LinesTool) RenderCurrentState(ren *sdl.Renderer) {
 	for _, line := range tool.lines {
-		utils.DrawThickLine(ren, &line.points[0], &line.points[1], line.thickness, line.color)
+		pkg.DrawThickLine(ren, &line.points[0], &line.points[1], line.thickness, line.color)
 	}
 }
 
@@ -137,7 +134,7 @@ func (tool LinesTool) RenderScreenshot(ren *sdl.Renderer) {
 func closestStraightLinePoint(start sdl.Point, current sdl.Point) sdl.Point {
 	vertical := sdl.Point{X: start.X, Y: current.Y}
 	horizontal := sdl.Point{X: current.X, Y: start.Y}
-	diagonalLength := int32((utils.Abs(int(start.Y-vertical.Y)) + utils.Abs(int(start.X-horizontal.X))) / 2)
+	diagonalLength := int32((pkg.Abs(int(start.Y-vertical.Y)) + pkg.Abs(int(start.X-horizontal.X))) / 2)
 	var diagonalX, diagonalY int32
 	if current.X > start.X {
 		diagonalX = start.X + diagonalLength

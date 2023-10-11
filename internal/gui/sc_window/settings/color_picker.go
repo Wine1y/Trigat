@@ -3,8 +3,8 @@ package settings
 import (
 	"math"
 
-	"github.com/Wine1y/trigat/gui"
-	"github.com/Wine1y/trigat/utils"
+	"github.com/Wine1y/trigat/internal/gui"
+	"github.com/Wine1y/trigat/pkg"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -43,10 +43,10 @@ func (setting *ColorPickerSetting) Render(ren *sdl.Renderer) {
 		setting.lastRenderer = ren
 		setting.updateGradients()
 	}
-	utils.CopyTexture(ren, setting.currentPickerGradient.texture, setting.currentPickerGradient.bbox, nil)
-	utils.CopyTexture(ren, setting.currentHueGradient.texture, setting.currentHueGradient.bbox, nil)
+	pkg.CopyTexture(ren, setting.currentPickerGradient.texture, setting.currentPickerGradient.bbox, nil)
+	pkg.CopyTexture(ren, setting.currentHueGradient.texture, setting.currentHueGradient.bbox, nil)
 
-	utils.DrawThickLine(
+	pkg.DrawThickLine(
 		ren,
 		&sdl.Point{
 			X: setting.currentHueGradient.bbox.X + setting.currentColor.hueOffset(setting.currentHueGradient.bbox.W),
@@ -64,7 +64,7 @@ func (setting *ColorPickerSetting) Render(ren *sdl.Renderer) {
 		pickerThumbColor = pickerThumbColorDark
 	}
 
-	utils.DrawThickCircle(
+	pkg.DrawThickCircle(
 		ren,
 		&sdl.Point{
 			X: setting.currentPickerGradient.bbox.X + setting.currentColor.xOffset(setting.currentPickerGradient.bbox.W),
@@ -74,7 +74,7 @@ func (setting *ColorPickerSetting) Render(ren *sdl.Renderer) {
 		pickerThumbThickness,
 		pickerThumbColor,
 	)
-	utils.DrawThickRectangle(ren, &setting.bbox, 1, sdl.Color{R: 0, G: 255, B: 0, A: 255})
+	pkg.DrawThickRectangle(ren, &setting.bbox, 1, sdl.Color{R: 0, G: 255, B: 0, A: 255})
 }
 
 func (setting *ColorPickerSetting) SettingCallbacks() *gui.WindowCallbackSet {
@@ -151,7 +151,7 @@ func (setting *ColorPickerSetting) SetWidth(width int32) {
 }
 
 func (setting *ColorPickerSetting) newHueValue(hueOffset int32) {
-	hueOffset = utils.Clamp(0, hueOffset, setting.currentHueGradient.bbox.W-1)
+	hueOffset = pkg.Clamp(0, hueOffset, setting.currentHueGradient.bbox.W-1)
 	h := 360 / (float64(setting.currentHueGradient.bbox.W) - 1)
 	setting.currentColor.H = h * float64(hueOffset)
 	setting.updatePickerGradient()
@@ -159,8 +159,8 @@ func (setting *ColorPickerSetting) newHueValue(hueOffset int32) {
 }
 
 func (setting *ColorPickerSetting) newPickerValue(xOffset, yOffset int32) {
-	xOffset = utils.Clamp(0, xOffset, setting.currentPickerGradient.bbox.W-1)
-	yOffset = utils.Clamp(0, yOffset, setting.currentPickerGradient.bbox.H-1)
+	xOffset = pkg.Clamp(0, xOffset, setting.currentPickerGradient.bbox.W-1)
+	yOffset = pkg.Clamp(0, yOffset, setting.currentPickerGradient.bbox.H-1)
 	h := 1 / (float64(setting.currentPickerGradient.bbox.W) - 1)
 	s := h * float64(xOffset)
 	l := 1 - (float64(yOffset) / float64(pickerGradientHeight))
@@ -194,12 +194,12 @@ func (setting *ColorPickerSetting) updatePickerGradient() error {
 	if err = setting.lastRenderer.SetRenderTarget(texture); err != nil {
 		return err
 	}
-	saturationLinspace := utils.Linspace(0, 1, int(pickerW))
-	lightnessLinspace := utils.Linspace(1, 0, int(pickerGradientHeight))
+	saturationLinspace := pkg.Linspace(0, 1, int(pickerW))
+	lightnessLinspace := pkg.Linspace(1, 0, int(pickerGradientHeight))
 	for y := int32(0); y < pickerGradientHeight; y++ {
 		for x := int32(0); x < pickerW; x++ {
 			color := hslToRGB(setting.currentColor.H, saturationLinspace[x], lightnessLinspace[y])
-			utils.DrawPoint(setting.lastRenderer, &sdl.Point{X: x, Y: y}, color)
+			pkg.DrawPoint(setting.lastRenderer, &sdl.Point{X: x, Y: y}, color)
 		}
 	}
 	if err = setting.lastRenderer.SetRenderTarget(nil); err != nil {
@@ -231,11 +231,11 @@ func (setting *ColorPickerSetting) updateHueGradient() error {
 	if err = setting.lastRenderer.SetRenderTarget(texture); err != nil {
 		return err
 	}
-	hueLinspace := utils.Linspace(0, 360, int(hueW))
+	hueLinspace := pkg.Linspace(0, 360, int(hueW))
 	for y := int32(0); y < hueGradientHeight; y++ {
 		for x := int32(0); x < hueW; x++ {
 			color := hslToRGB(hueLinspace[x], 1, 0.5)
-			utils.DrawPoint(setting.lastRenderer, &sdl.Point{X: x, Y: y}, color)
+			pkg.DrawPoint(setting.lastRenderer, &sdl.Point{X: x, Y: y}, color)
 		}
 	}
 	if err = setting.lastRenderer.SetRenderTarget(nil); err != nil {
@@ -288,9 +288,9 @@ func (color hslColor) hueOffset(hueWidth int32) int32 {
 }
 
 func hslToRGB(h, s, l float64) sdl.Color {
-	C := (1 - utils.Abs(l*2-1)) * s
+	C := (1 - pkg.Abs(l*2-1)) * s
 	H := h / 60
-	X := C * (1 - utils.Abs(math.Mod(H, 2)-1))
+	X := C * (1 - pkg.Abs(math.Mod(H, 2)-1))
 	var r, g, b float64
 	switch {
 	case H >= 0 && H <= 1:

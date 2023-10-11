@@ -1,12 +1,8 @@
-package main
+package internal
 
 import (
-	"runtime"
-
-	"github.com/Wine1y/trigat/gui"
-	scWindow "github.com/Wine1y/trigat/gui/sc_window"
-	"github.com/Wine1y/trigat/hotkeys"
-	hk "golang.design/x/hotkey"
+	"github.com/Wine1y/trigat/internal/gui"
+	"github.com/Wine1y/trigat/pkg/hotkeys"
 )
 
 type App struct {
@@ -41,27 +37,4 @@ func (app *App) setHotkeys(hotkeys *hotkeys.HotKeySet) {
 		panic("Can't activate hotkeys")
 	}
 	app.currentHotKeys = hotkeys
-}
-
-func main() {
-	app := App{}
-	stopChan := make(chan bool)
-
-	screenshotCb := func() {
-		screenshotWindow := scWindow.NewScreenshotWindow()
-		app.OpenWindow(screenshotWindow)
-		screenshotWindow = nil
-		runtime.GC()
-	}
-	exitCb := func() {
-		stopChan <- true
-	}
-
-	screenshotHk := hotkeys.NewHotKey(hk.KeyS, nil, &screenshotCb, nil)
-	exitHk := hotkeys.NewHotKey(hk.KeyQ, nil, &exitCb, nil)
-	defaultHotKeys := hotkeys.NewHotKeySet(screenshotHk, exitHk)
-
-	app.Start(defaultHotKeys)
-	println("App started")
-	<-stopChan
 }

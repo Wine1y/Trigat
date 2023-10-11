@@ -3,15 +3,12 @@ package editTools
 import (
 	_ "embed"
 
-	"github.com/Wine1y/trigat/gui"
-	"github.com/Wine1y/trigat/gui/sc_window/settings"
-	"github.com/Wine1y/trigat/utils"
+	"github.com/Wine1y/trigat/assets"
+	"github.com/Wine1y/trigat/internal/gui"
+	"github.com/Wine1y/trigat/internal/gui/sc_window/settings"
+	"github.com/Wine1y/trigat/pkg"
 	"github.com/veandco/go-sdl2/sdl"
 )
-
-//go:embed icons/paint_tool.png
-var paintIconData []byte
-var paintRgbIcon = utils.LoadPNGSurface(paintIconData)
 
 type PaintTool struct {
 	isDragging     bool
@@ -45,7 +42,7 @@ func NewPaintTool() *PaintTool {
 }
 
 func (tool PaintTool) ToolIcon() *sdl.Surface {
-	return paintRgbIcon
+	return assets.PaintIcon
 }
 
 func (tool *PaintTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet {
@@ -93,7 +90,7 @@ func (tool *PaintTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 func (tool PaintTool) RenderCurrentState(ren *sdl.Renderer) {
 	for _, stroke := range tool.strokes {
 		if len(stroke.points) == 1 {
-			utils.DrawFilledRectangle(
+			pkg.DrawFilledRectangle(
 				ren,
 				&sdl.Rect{
 					X: stroke.points[0].X, Y: stroke.points[0].Y,
@@ -104,7 +101,7 @@ func (tool PaintTool) RenderCurrentState(ren *sdl.Renderer) {
 			continue
 		}
 		for i := 0; i < len(stroke.points)-1; i++ {
-			utils.DrawThickLine(ren, &stroke.points[i], &stroke.points[i+1], stroke.thickness, stroke.color)
+			pkg.DrawThickLine(ren, &stroke.points[i], &stroke.points[i+1], stroke.thickness, stroke.color)
 		}
 	}
 }

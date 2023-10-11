@@ -3,15 +3,12 @@ package editTools
 import (
 	_ "embed"
 
-	"github.com/Wine1y/trigat/gui"
-	"github.com/Wine1y/trigat/gui/sc_window/settings"
-	"github.com/Wine1y/trigat/utils"
+	"github.com/Wine1y/trigat/assets"
+	"github.com/Wine1y/trigat/internal/gui"
+	"github.com/Wine1y/trigat/internal/gui/sc_window/settings"
+	"github.com/Wine1y/trigat/pkg"
 	"github.com/veandco/go-sdl2/sdl"
 )
-
-//go:embed icons/rect_tool.png
-var rectIconData []byte
-var rectIcon = utils.LoadPNGSurface(rectIconData)
 
 type RectsTool struct {
 	isDragging          bool
@@ -48,7 +45,7 @@ func NewRectsTool() *RectsTool {
 }
 
 func (tool RectsTool) ToolIcon() *sdl.Surface {
-	return rectIcon
+	return assets.RectIcon
 }
 
 func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet {
@@ -77,7 +74,7 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 			rect.W = x - rect.X
 			rect.H = y - rect.Y
 			if tool.isShiftPressed {
-				utils.RectIntoSquare(rect)
+				pkg.RectIntoSquare(rect)
 			}
 		}
 		tool.lastCursorPos = &sdl.Point{X: x, Y: y}
@@ -99,7 +96,7 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 			return false
 		}
 		if tool.isDragging {
-			utils.RectIntoSquare(tool.rects[len(tool.rects)-1].sdlRect)
+			pkg.RectIntoSquare(tool.rects[len(tool.rects)-1].sdlRect)
 		}
 		tool.isShiftPressed = true
 		return false
@@ -123,7 +120,7 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 
 func (tool RectsTool) RenderCurrentState(ren *sdl.Renderer) {
 	for _, rect := range tool.rects {
-		utils.DrawThickRectangle(ren, rect.sdlRect, rect.borderThickness, rect.color)
+		pkg.DrawThickRectangle(ren, rect.sdlRect, rect.borderThickness, rect.color)
 	}
 }
 

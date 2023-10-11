@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/Wine1y/trigat/gui"
-	"github.com/Wine1y/trigat/hotkeys"
-	"github.com/Wine1y/trigat/utils"
+	"github.com/Wine1y/trigat/internal/gui"
+	"github.com/Wine1y/trigat/pkg"
+	"github.com/Wine1y/trigat/pkg/hotkeys"
 	"github.com/kbinani/screenshot"
 	"github.com/veandco/go-sdl2/sdl"
 	hk "golang.design/x/hotkey"
@@ -67,7 +67,7 @@ func (window *ScreenshotWindow) callbackSet() *gui.WindowCallbackSet {
 	set.KeyDown = append(set.KeyDown, func(keysym sdl.Keysym) bool {
 		if keysym.Sym == sdl.K_s && (keysym.Mod&sdl.KMOD_CTRL) != 0 {
 			ren := window.Renderer()
-			utils.CopyTexture(ren, window.screenshotTexture, nil, nil)
+			pkg.CopyTexture(ren, window.screenshotTexture, nil, nil)
 			window.toolsPanel.RenderScreenshot(ren)
 			surface := readRenderIntoSurface(ren)
 			croppedSurface := window.toolsPanel.CropScreenshot(surface)
@@ -90,10 +90,10 @@ func (window *ScreenshotWindow) HotKeys() *hotkeys.HotKeySet {
 }
 
 func (window *ScreenshotWindow) drawScreenshotBackground(ren *sdl.Renderer) {
-	utils.CopyTexture(ren, window.screenshotTexture, nil, nil)
+	pkg.CopyTexture(ren, window.screenshotTexture, nil, nil)
 
 	rect := ren.GetViewport()
-	utils.DrawFilledRectangle(ren, &rect, dimColor)
+	pkg.DrawFilledRectangle(ren, &rect, dimColor)
 }
 
 func takeScreenshot() (*image.RGBA, error) {

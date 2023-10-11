@@ -4,8 +4,9 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/Wine1y/trigat/gui"
-	"github.com/Wine1y/trigat/utils"
+	"github.com/Wine1y/trigat/assets"
+	"github.com/Wine1y/trigat/internal/gui"
+	"github.com/Wine1y/trigat/pkg"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -17,10 +18,6 @@ var selectionOuterTooltipColor = sdl.Color{R: 255, G: 255, B: 255, A: 255}
 var selectionInnerTooltipColor = sdl.Color{R: 0, G: 0, B: 0, A: 255}
 var selectionBorderColor = sdl.Color{R: 255, G: 255, B: 255, A: 255}
 var selectionFillColor = sdl.Color{R: 255, G: 255, B: 255, A: 50}
-
-//go:embed icons/selection_tool.png
-var selectionIconData []byte
-var selectionIcon = utils.LoadPNGSurface(selectionIconData)
 
 type SelectionTool struct {
 	isDragging     bool
@@ -36,13 +33,13 @@ func NewSelectionTool(renderer *sdl.Renderer) *SelectionTool {
 	return &SelectionTool{
 		isDragging:     false,
 		isShiftPressed: false,
-		tooltip:        &selectionTooltip{font: utils.LoadFont(defaultFontData, 14)},
+		tooltip:        &selectionTooltip{font: assets.GetAppFont(14)},
 		ren:            renderer,
 	}
 }
 
 func (tool SelectionTool) ToolIcon() *sdl.Surface {
-	return selectionIcon
+	return assets.SelectionIcon
 }
 
 func (tool *SelectionTool) OnToolDeactivated() {
@@ -70,7 +67,7 @@ func (tool *SelectionTool) ToolCallbacks(_ *ActionsQueue) *gui.WindowCallbackSet
 			sel.W = x - sel.X
 			sel.H = y - sel.Y
 			if tool.isShiftPressed {
-				utils.RectIntoSquare(sel)
+				pkg.RectIntoSquare(sel)
 			}
 			tool.tooltip.updateTooltip(tool.ren, tool.selection)
 		}
@@ -90,7 +87,7 @@ func (tool *SelectionTool) ToolCallbacks(_ *ActionsQueue) *gui.WindowCallbackSet
 	callbacks.KeyDown = append(callbacks.KeyDown, func(keysym sdl.Keysym) bool {
 		if keysym.Sym == sdl.K_LSHIFT || keysym.Sym == sdl.K_RSHIFT {
 			if tool.isDragging {
-				utils.RectIntoSquare(tool.selection)
+				pkg.RectIntoSquare(tool.selection)
 				tool.tooltip.updateTooltip(tool.ren, tool.selection)
 			}
 			tool.isShiftPressed = true
@@ -132,8 +129,8 @@ func (tool *SelectionTool) ToolCallbacks(_ *ActionsQueue) *gui.WindowCallbackSet
 func (tool SelectionTool) RenderCurrentState(ren *sdl.Renderer) {
 	if tool.selection != nil {
 		sel := tool.selection
-		utils.DrawFilledRectangle(ren, sel, selectionFillColor)
-		utils.DrawThickRectangle(ren, sel, selectionThickness, selectionBorderColor)
+		pkg.DrawFilledRectangle(ren, sel, selectionFillColor)
+		pkg.DrawThickRectangle(ren, sel, selectionThickness, selectionBorderColor)
 		tool.tooltip.texture.Draw(ren, tool.tooltip.startingPosition)
 	}
 }
@@ -161,15 +158,15 @@ func (tool SelectionTool) CropScreenshot(surface *sdl.Surface) *sdl.Surface {
 }
 
 type selectionTooltip struct {
-	texture          *utils.StringTexture
+	texture          *pkg.StringTexture
 	startingPosition *sdl.Point
 	font             *ttf.Font
 	color            *sdl.Color
 }
 
 func (tooltip *selectionTooltip) updateTooltip(ren *sdl.Renderer, selection *sdl.Rect) {
-	text := fmt.Sprintf("%v x %v", utils.Abs(selection.W), utils.Abs(selection.H))
-	textW, textH := utils.SizeString(tooltip.font, text)
+	text := fmt.Sprintf("%v x %v", pkg.Abs(selection.W), pkg.Abs(selection.H))
+	textW, textH := pkg.SizeString(tooltip.font, text)
 
 	startingPoint := sdl.Point{
 		X: selection.X,
@@ -188,5 +185,5 @@ func (tooltip *selectionTooltip) updateTooltip(ren *sdl.Renderer, selection *sdl
 		tooltip.color = &selectionInnerTooltipColor
 	}
 	tooltip.startingPosition = &startingPoint
-	tooltip.texture = utils.NewStringTexture(ren, tooltip.font, text, *tooltip.color)
+	tooltip.texture = pkg.NewStringTexture(ren, tooltip.font, text, *tooltip.color)
 }

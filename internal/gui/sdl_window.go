@@ -4,12 +4,12 @@ import (
 	"runtime"
 	"unicode/utf8"
 
+	"github.com/Wine1y/trigat/config"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
 
-const FPS uint64 = 60
-const TICKS_PER_FRAME uint64 = 1000 / FPS
+var TICKS_PER_FRAME uint64 = 1000 / config.GetAppFPS()
 
 type SDLWindow struct {
 	win         *sdl.Window
