@@ -18,6 +18,7 @@ var cursorColor = sdl.Color{R: 255, G: 255, B: 255, A: 255}
 var selectionColor = sdl.Color{R: 0, G: 0, B: 255, A: 100}
 
 const paragraphPadding int32 = 5
+const paragraphDraggingPadding int32 = 5
 const cursorAnimationDuration time.Duration = time.Millisecond * 1250
 
 type TextTool struct {
@@ -32,15 +33,17 @@ type TextTool struct {
 	isShiftSelecting bool
 	isMouseSelecting bool
 	selection        textSelection
+	draggingHandle   textDraggingHandle
 	DefaultScreenshotEditTool
 }
 
 func NewTextTool(renderer *sdl.Renderer) *TextTool {
 	tool := TextTool{
-		paragraphs: make([]*pkg.TextParagraph, 0),
-		ren:        renderer,
-		textFont:   assets.GetAppFont(14),
-		selection:  textSelection{start: 0, length: 0, selected: false},
+		paragraphs:     make([]*pkg.TextParagraph, 0),
+		ren:            renderer,
+		textFont:       assets.GetAppFont(14),
+		selection:      textSelection{start: 0, length: 0, selected: false},
+		draggingHandle: textDraggingHandle{draggingParagraph: nil, xHandleOffset: 0, yHandleOffset: 0},
 	}
 
 	colorPicker := settings.NewColorPickerSetting(func(color sdl.Color) {
@@ -68,13 +71,21 @@ func (tool *TextTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet 
 		}
 		click := sdl.Point{X: x, Y: y}
 		for _, par := range tool.paragraphs {
-			if click.InRect(par.GetBBox()) {
+			bbox := par.GetBBox()
+			if click.InRect(bbox) {
 				tool.deselectText()
 				tool.activeParagraph = par
 				tool.moveCursor(par.GetPositionByOffset(x-par.TextStart.X, y-par.TextStart.Y))
 				tool.isMouseSelecting = true
 				return false
 			}
+			if click.InRect(par.GetPaddedBBox(paragraphDraggingPadding)) {
+				tool.draggingHandle.xHandleOffset = click.X - bbox.X
+				tool.draggingHandle.yHandleOffset = click.Y - bbox.Y
+				tool.draggingHandle.draggingParagraph = par
+				return false
+			}
+
 		}
 		newParagraph := pkg.NewTextParagraph(
 			sdl.Point{X: x, Y: y},
@@ -93,18 +104,6 @@ func (tool *TextTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet 
 
 	callbacks.MouseMove = append(callbacks.MouseMove, func(x, y int32) bool {
 		move := sdl.Point{X: x, Y: y}
-		inParagraph := false
-		for _, par := range tool.paragraphs {
-			if move.InRect(par.GetBBox()) {
-				inParagraph = true
-				break
-			}
-		}
-		if inParagraph {
-			sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_IBEAM))
-		} else {
-			sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_ARROW))
-		}
 		if tool.isMouseSelecting && !move.InRect(tool.activeParagraph.GetBBox()) {
 			tool.isMouseSelecting = false
 		}
@@ -115,13 +114,39 @@ func (tool *TextTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet 
 					y-tool.activeParagraph.TextStart.Y,
 				),
 			)
+			sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_IBEAM))
+			return false
 		}
+		if tool.draggingHandle.draggingParagraph != nil {
+			tool.draggingHandle.draggingParagraph.TextStart = sdl.Point{
+				X: move.X - tool.draggingHandle.xHandleOffset,
+				Y: move.Y - tool.draggingHandle.yHandleOffset,
+			}
+			sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_SIZEALL))
+			return false
+		}
+		for _, par := range tool.paragraphs {
+			if move.InRect(par.GetBBox()) {
+				sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_IBEAM))
+				return false
+			}
+			if move.InRect(par.GetPaddedBBox(paragraphDraggingPadding)) {
+				sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_SIZEALL))
+				return false
+			}
+		}
+		sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_ARROW))
 		return false
 	})
 
 	callbacks.MouseUp = append(callbacks.MouseUp, func(button uint8, x, y int32) bool {
 		if button == sdl.BUTTON_LEFT {
-			tool.isMouseSelecting = false
+			if tool.isMouseSelecting {
+				tool.isMouseSelecting = false
+			}
+			if tool.draggingHandle.draggingParagraph != nil {
+				tool.draggingHandle.draggingParagraph = nil
+			}
 		}
 		return false
 	})
@@ -247,6 +272,7 @@ func (tool TextTool) ToolColor() *sdl.Color {
 
 func (tool *TextTool) OnToolDeactivated() {
 	tool.activeParagraph = nil
+	tool.draggingHandle.draggingParagraph = nil
 	tool.selection.selected = false
 	tool.isShiftSelecting = false
 	tool.isMouseSelecting = false
@@ -386,6 +412,12 @@ func (tool TextTool) renderSelection(ren *sdl.Renderer) {
 			selectionColor,
 		)
 	}
+}
+
+type textDraggingHandle struct {
+	draggingParagraph *pkg.TextParagraph
+	xHandleOffset     int32
+	yHandleOffset     int32
 }
 
 type textSelection struct {

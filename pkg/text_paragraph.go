@@ -47,6 +47,14 @@ func (par TextParagraph) GetBBox() *sdl.Rect {
 	}
 }
 
+func (par TextParagraph) GetPaddedBBox(padding int32) *sdl.Rect {
+	bbox := par.GetBBox()
+	return &sdl.Rect{
+		X: bbox.X - padding, Y: bbox.Y - padding,
+		W: bbox.W + padding*2, H: bbox.H + padding*2,
+	}
+}
+
 func (par *TextParagraph) SetColor(color sdl.Color) {
 	par.Color = color
 }
