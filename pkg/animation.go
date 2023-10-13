@@ -12,8 +12,23 @@ type Animation struct {
 	timingFunction func(startValue, endValue int, totalFrames int, currentFrame int) int
 }
 
+func (animation *Animation) ReStart() {
+	animation.currentFrame = 0
+}
+
+func (animation *Animation) IsEnded() bool {
+	return animation.repeats > 0 && animation.currentRepeat() >= animation.repeats
+}
+
+func (animation *Animation) End() {
+	if animation.repeats == 0 {
+		panic("Can't end an infinite animation")
+	}
+	animation.currentFrame = animation.totalFrames + 1
+}
+
 func (animation *Animation) CurrentValue() int {
-	currentRepeat := int(float64(animation.currentFrame) / float64(animation.totalFrames))
+	currentRepeat := animation.currentRepeat()
 	if animation.repeats > 0 && currentRepeat >= animation.repeats {
 		return animation.endValue
 	}
@@ -29,6 +44,10 @@ func (animation *Animation) CurrentValue() int {
 	}
 	animation.currentFrame++
 	return value
+}
+
+func (animation Animation) currentRepeat() int {
+	return int(float64(animation.currentFrame) / float64(animation.totalFrames))
 }
 
 func (animation *Animation) getValue(frame int) int {

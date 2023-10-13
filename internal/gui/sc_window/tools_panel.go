@@ -237,12 +237,10 @@ func (panel *ToolsPanel) resizePanel(viewportW, viewportH int32) {
 			Y: meta.iconBBox.Y - iconPadding,
 			W: toolSize, H: toolSize,
 		}
-		if meta.tool.ToolColor() != nil {
-			meta.colorBBox = &sdl.Rect{
-				X: meta.toolBBox.X + (meta.toolBBox.W-toolColorWidth)/2,
-				Y: meta.toolBBox.Y + meta.toolBBox.H - toolColorHeight - toolColorPadding,
-				W: toolColorWidth, H: toolColorHeight,
-			}
+		meta.colorBBox = &sdl.Rect{
+			X: meta.toolBBox.X + (meta.toolBBox.W-toolColorWidth)/2,
+			Y: meta.toolBBox.Y + meta.toolBBox.H - toolColorHeight - toolColorPadding,
+			W: toolColorWidth, H: toolColorHeight,
 		}
 		var toolSettingsH int32 = 0
 		for _, setting := range meta.tool.ToolSettings() {
