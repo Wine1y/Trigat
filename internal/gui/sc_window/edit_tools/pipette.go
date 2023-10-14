@@ -3,9 +3,7 @@ package editTools
 import (
 	_ "embed"
 	"fmt"
-	"reflect"
 	"time"
-	"unsafe"
 
 	"github.com/Wine1y/trigat/assets"
 	"github.com/Wine1y/trigat/config"
@@ -26,6 +24,9 @@ const colorTipleteSquareMargin int32 = 5
 const colorTripletShadingFactor float64 = 0.5
 const colorTripletLightningFactor float64 = 1.5
 
+const pipetteMagnifierSide int = 11
+const pipetteMagnifierPixelSize int32 = 15
+
 var pipetteWidgetBackground sdl.Color = sdl.Color{R: 255, G: 255, B: 255, A: 255}
 var pipetteWidgetCurrentSquareColor sdl.Color = sdl.Color{R: 0, G: 0, B: 0, A: 255}
 var pipetteWidgetCopiedTextColor sdl.Color = sdl.Color{R: 255, G: 255, B: 255, A: 255}
@@ -34,6 +35,7 @@ type PipetteTool struct {
 	ren         *sdl.Renderer
 	isDragging  bool
 	widget      pipetteWidget
+	magnifier   pipetteMagnifier
 	deactivated bool
 	DefaultScreenshotEditTool
 }
@@ -93,6 +95,7 @@ func (tool *PipetteTool) ToolCallbacks(_ *ActionsQueue) *gui.WindowCallbackSet {
 		} else {
 			sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_ARROW))
 		}
+		tool.magnifier.newPos(tool.ren, sdl.Point{X: x, Y: y})
 		return false
 	})
 
@@ -130,21 +133,12 @@ func (tool PipetteTool) RenderScreenshot(_ *sdl.Renderer) {}
 func (tool PipetteTool) RenderCurrentState(ren *sdl.Renderer) {
 	if !tool.deactivated {
 		tool.widget.draw(ren)
+		tool.magnifier.draw(ren)
 	}
 }
 
 func (tool PipetteTool) getPixelColor(x, y int32) sdl.Color {
-	pixel := make([]uint8, 4)
-	sh := (*reflect.SliceHeader)(unsafe.Pointer(&pixel))
-	err := tool.ren.ReadPixels(
-		&sdl.Rect{X: x, Y: y, W: 1, H: 1},
-		uint32(sdl.PIXELFORMAT_RGBA32),
-		unsafe.Pointer(sh.Data),
-		4,
-	)
-	if err != nil {
-		panic(err)
-	}
+	pixel := pkg.ReadRGBA32(tool.ren, &sdl.Rect{X: x, Y: y, W: 1, H: 1})
 	return sdl.Color{R: pixel[0], G: pixel[1], B: pixel[2], A: pixel[3]}
 }
 
@@ -267,5 +261,63 @@ func (widget pipetteWidget) draw(ren *sdl.Renderer) {
 			Y: widget.bbox.Y - pipetteWidgetMargin - widget.copiedTexture.TextHeight,
 		}
 		widget.copiedTexture.Draw(ren, &textureLT)
+	}
+}
+
+type pipetteMagnifier struct {
+	currentPos         sdl.Point
+	shouldUpdateColors bool
+	currentColors      [pipetteMagnifierSide][pipetteMagnifierSide]*sdl.Color
+	initialized        bool
+}
+
+func (magnifier *pipetteMagnifier) newPos(ren *sdl.Renderer, pos sdl.Point) {
+	magnifier.currentPos = pos
+	magnifier.shouldUpdateColors = true
+	magnifier.initialized = true
+}
+
+func (magnifier *pipetteMagnifier) updateColors(ren *sdl.Renderer) {
+	pitch := pipetteMagnifierSide * 4
+	colorsRect := sdl.Rect{
+		X: magnifier.currentPos.X - int32(pipetteMagnifierSide/2),
+		Y: magnifier.currentPos.Y - int32(pipetteMagnifierSide/2),
+		W: int32(pipetteMagnifierSide), H: int32(pipetteMagnifierSide),
+	}
+	pixels := pkg.ReadRGBA32(ren, &colorsRect)
+	for row := 0; row < len(magnifier.currentColors); row++ {
+		for column := 0; column < len(magnifier.currentColors[row]); column++ {
+			pos := row*pitch + column*4
+			magnifier.currentColors[row][column] = &sdl.Color{
+				R: pixels[pos],
+				G: pixels[pos+1],
+				B: pixels[pos+2],
+				A: pixels[pos+3],
+			}
+		}
+	}
+}
+
+func (magnifier *pipetteMagnifier) draw(ren *sdl.Renderer) {
+	if !magnifier.initialized {
+		return
+	}
+	if magnifier.shouldUpdateColors {
+		magnifier.updateColors(ren)
+		magnifier.shouldUpdateColors = false
+	}
+	x := magnifier.currentPos.X - (int32(pipetteMagnifierSide) / 2 * pipetteMagnifierPixelSize) - pipetteMagnifierPixelSize/2
+	y := magnifier.currentPos.Y - (int32(pipetteMagnifierSide) / 2 * pipetteMagnifierPixelSize) - pipetteMagnifierPixelSize/2
+	for row := 0; row < pipetteMagnifierSide; row++ {
+		for column := 0; column < pipetteMagnifierSide; column++ {
+			if color := magnifier.currentColors[row][column]; color != nil {
+				rect := sdl.Rect{
+					X: x + int32(column)*pipetteMagnifierPixelSize,
+					Y: y + int32(row)*pipetteMagnifierPixelSize,
+					W: pipetteMagnifierPixelSize, H: pipetteMagnifierPixelSize,
+				}
+				pkg.DrawFilledRectangle(ren, &rect, *color)
+			}
+		}
 	}
 }

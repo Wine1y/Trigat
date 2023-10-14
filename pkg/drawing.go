@@ -1,6 +1,9 @@
 package pkg
 
 import (
+	"reflect"
+	"unsafe"
+
 	"github.com/veandco/go-sdl2/gfx"
 	"github.com/veandco/go-sdl2/img"
 	"github.com/veandco/go-sdl2/sdl"
@@ -70,4 +73,19 @@ func CopyTexture(ren *sdl.Renderer, texture *sdl.Texture, dst *sdl.Rect, blendMo
 		texture.SetBlendMode(*blendMode)
 	}
 	ren.Copy(texture, nil, dst)
+}
+
+func ReadRGBA32(ren *sdl.Renderer, rect *sdl.Rect) []uint8 {
+	pixels := make([]uint8, rect.W*rect.H*4)
+	sh := (*reflect.SliceHeader)(unsafe.Pointer(&pixels))
+	err := ren.ReadPixels(
+		rect,
+		uint32(sdl.PIXELFORMAT_RGBA32),
+		unsafe.Pointer(sh.Data),
+		int(rect.W*4),
+	)
+	if err != nil {
+		panic(err)
+	}
+	return pixels
 }

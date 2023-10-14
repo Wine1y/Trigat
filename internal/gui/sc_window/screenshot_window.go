@@ -122,18 +122,8 @@ func getScreenshotSurface(screenshot *image.RGBA) (*sdl.Surface, error) {
 func readRenderIntoSurface(ren *sdl.Renderer) *sdl.Surface {
 	vp := ren.GetViewport()
 	pitch := int(vp.W) * 4
-	pixels := make([]uint8, pitch*int(vp.H))
-
+	pixels := pkg.ReadRGBA32(ren, nil)
 	sh := (*reflect.SliceHeader)(unsafe.Pointer(&pixels))
-	err := ren.ReadPixels(
-		nil,
-		uint32(sdl.PIXELFORMAT_RGBA32),
-		unsafe.Pointer(sh.Data),
-		pitch,
-	)
-	if err != nil {
-		panic(err)
-	}
 	surface, err := sdl.CreateRGBSurfaceFrom(
 		unsafe.Pointer(sh.Data),
 		vp.W,

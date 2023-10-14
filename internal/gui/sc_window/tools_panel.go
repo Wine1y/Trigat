@@ -140,17 +140,14 @@ func (panel ToolsPanel) DrawPanel(ren *sdl.Renderer) {
 
 func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 	callbacks.MouseDown = append(callbacks.MouseDown, func(button uint8, x, y int32) bool {
-		if button != sdl.BUTTON_LEFT {
-			return false
-		}
 		click := sdl.Point{X: x, Y: y}
 		for _, meta := range panel.tools {
-			if click.InRect(&meta.toolBBox) {
+			if click.InRect(&meta.toolBBox) && button == sdl.BUTTON_LEFT {
 				panel.setActiveTool(meta)
 				return true
 			}
 			if panel.hoveredTool == meta && sdl.GetTicks64()-panel.hoveredAt >= settingsShowDelayMs {
-				if click.InRect(&panel.hoveredTool.settingsBBox) {
+				if click.InRect(&panel.hoveredTool.settingsBBox) && button == sdl.BUTTON_LEFT {
 					panel.setActiveTool(meta)
 				}
 			}
