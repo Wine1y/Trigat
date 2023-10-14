@@ -34,7 +34,7 @@ func NewSDLWindow(
 	if err := ttf.Init(); err != nil {
 		panic(err)
 	}
-	win, err := sdl.CreateWindow(title, x, y, width, height, flags)
+	win, err := sdl.CreateWindow(title, x, y, width, height, flags|sdl.WINDOW_HIDDEN)
 	if err != nil {
 		panic(err)
 	}
@@ -42,6 +42,9 @@ func NewSDLWindow(
 	if err != nil {
 		panic(err)
 	}
+	//Made to avoid unrendered empty frame when starting the app
+	win.SetWindowOpacity(0)
+	win.Show()
 
 	return &SDLWindow{
 		win:       win,
@@ -52,6 +55,9 @@ func NewSDLWindow(
 }
 
 func (window *SDLWindow) StartMainLoop() {
+	window.render(window.ren)
+	window.ren.Present()
+	window.win.SetWindowOpacity(1)
 	lastTick := sdl.GetTicks64()
 	for {
 		window.shouldClose = window.handleEvents()
