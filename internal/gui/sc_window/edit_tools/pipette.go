@@ -151,6 +151,10 @@ func (tool *PipetteTool) copyColorToClipboard(color sdl.Color) error {
 	return nil
 }
 
+func (tool PipetteTool) RequiresScreenDim() bool {
+	return false
+}
+
 type pipetteWidget struct {
 	bbox             sdl.Rect
 	colorSquaresBBox [3]sdl.Rect

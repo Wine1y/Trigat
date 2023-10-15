@@ -15,6 +15,7 @@ type ScreenshotEditTool interface {
 	ToolColor() *sdl.Color
 	OnToolActivated()
 	OnToolDeactivated()
+	RequiresScreenDim() bool
 }
 
 type ScreenshotCropTool interface {
@@ -39,4 +40,8 @@ func (tool DefaultScreenshotEditTool) ToolSettings() []settings.ToolSetting {
 
 func (tool DefaultScreenshotEditTool) ToolColor() *sdl.Color {
 	return nil
+}
+
+func (tool DefaultScreenshotEditTool) RequiresScreenDim() bool {
+	return true
 }

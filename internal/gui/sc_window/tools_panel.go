@@ -29,16 +29,17 @@ var panelHoverToolColor = sdl.Color{R: 100, G: 100, B: 100, A: 200}
 var panelSeparatorColor = sdl.Color{R: 170, G: 170, B: 170, A: 255}
 
 type ToolsPanel struct {
-	tools        []*toolMeta
-	currentTool  *toolMeta
-	hoveredTool  *toolMeta
-	hoveredAt    uint64
-	cropTool     editTools.ScreenshotCropTool
-	actionsQueue *editTools.ActionsQueue
-	panelRect    *sdl.Rect
+	tools             []*toolMeta
+	currentTool       *toolMeta
+	hoveredTool       *toolMeta
+	hoveredAt         uint64
+	cropTool          editTools.ScreenshotCropTool
+	actionsQueue      *editTools.ActionsQueue
+	onNewToolSelected func(tool editTools.ScreenshotEditTool)
+	panelRect         *sdl.Rect
 }
 
-func NewToolsPanel(ren *sdl.Renderer) *ToolsPanel {
+func NewToolsPanel(ren *sdl.Renderer, onNewToolSelected func(tool editTools.ScreenshotEditTool)) *ToolsPanel {
 	selectionTool := editTools.NewSelectionTool(ren)
 	tools := []editTools.ScreenshotEditTool{
 		selectionTool,
@@ -54,9 +55,10 @@ func NewToolsPanel(ren *sdl.Renderer) *ToolsPanel {
 		metas[i] = &meta
 	}
 	panel := ToolsPanel{
-		tools:        metas,
-		actionsQueue: editTools.NewActionsQueue(),
-		cropTool:     selectionTool,
+		tools:             metas,
+		actionsQueue:      editTools.NewActionsQueue(),
+		cropTool:          selectionTool,
+		onNewToolSelected: onNewToolSelected,
 	}
 	if len(metas) > 0 {
 		panel.currentTool = metas[0]
@@ -213,6 +215,7 @@ func (panel *ToolsPanel) setActiveTool(toolMeta *toolMeta) {
 	}
 	panel.currentTool = toolMeta
 	panel.currentTool.tool.OnToolActivated()
+	panel.onNewToolSelected(toolMeta.tool)
 }
 
 func (panel *ToolsPanel) resizePanel(viewportW, viewportH int32) {

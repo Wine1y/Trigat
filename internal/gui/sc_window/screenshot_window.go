@@ -8,6 +8,7 @@ import (
 
 	"github.com/Wine1y/trigat/config"
 	"github.com/Wine1y/trigat/internal/gui"
+	editTools "github.com/Wine1y/trigat/internal/gui/sc_window/edit_tools"
 	"github.com/Wine1y/trigat/pkg"
 	"github.com/Wine1y/trigat/pkg/hotkeys"
 	"github.com/kbinani/screenshot"
@@ -19,6 +20,8 @@ const windowFlags uint32 = sdl.WINDOW_FULLSCREEN_DESKTOP | sdl.WINDOW_ALWAYS_ON_
 
 var dimColor = sdl.Color{R: 0, G: 0, B: 0}
 var dimAlpha uint8 = 100
+var initAnimationDuration time.Duration = time.Millisecond * 750
+var dimAnimationDuration time.Duration = time.Millisecond * 650
 
 type ScreenshotWindow struct {
 	screenshotTexture *sdl.Texture
@@ -44,17 +47,17 @@ func NewScreenshotWindow() *ScreenshotWindow {
 		dimmed: true,
 		initAnimation: pkg.NewLinearAnimation(
 			0, 100,
-			int(config.GetAppFPS()), time.Millisecond*750,
+			int(config.GetAppFPS()), initAnimationDuration,
 			1, false,
 		),
 		dimAnimation: pkg.NewLinearAnimation(
 			0, int(dimAlpha),
-			int(config.GetAppFPS()), time.Millisecond*750,
+			int(config.GetAppFPS()), dimAnimationDuration,
 			1, false,
 		),
 		undimAnimation: pkg.NewLinearAnimation(
 			int(dimAlpha), 0,
-			int(config.GetAppFPS()), time.Millisecond*750,
+			int(config.GetAppFPS()), dimAnimationDuration,
 			1, false,
 		),
 	}
@@ -67,15 +70,15 @@ func NewScreenshotWindow() *ScreenshotWindow {
 		window.render,
 		window.callbackSet,
 	)
+	window.SDLWindow = sdlWindow
 	screenshotTexture, err := sdlWindow.Renderer().CreateTextureFromSurface(screenshotSurface)
 	if err != nil {
 		panic("Can't create a screenshot texure")
 	}
-	window.toolsPanel = NewToolsPanel(sdlWindow.Renderer())
 	window.screenshotTexture = screenshotTexture
-	window.SDLWindow = sdlWindow
 	window.SDLWin().SetWindowOpacity(0)
 	window.SDLWin().Show()
+	window.toolsPanel = NewToolsPanel(window.Renderer(), window.onNewToolSelected)
 	window.render(window.Renderer())
 	window.Renderer().Present()
 	return &window
@@ -122,14 +125,22 @@ func (window *ScreenshotWindow) HotKeys() *hotkeys.HotKeySet {
 	return hotkeys.NewHotKeySet(exitHk)
 }
 
-func (window *ScreenshotWindow) DimBackground() {
+func (window *ScreenshotWindow) onNewToolSelected(tool editTools.ScreenshotEditTool) {
+	if tool.RequiresScreenDim() {
+		window.dimBackground()
+	} else {
+		window.undimBackground()
+	}
+}
+
+func (window *ScreenshotWindow) dimBackground() {
 	if !window.dimmed {
 		window.dimmed = true
 		window.dimAnimation.ReStart()
 	}
 }
 
-func (window *ScreenshotWindow) UndimBackground() {
+func (window *ScreenshotWindow) undimBackground() {
 	if window.dimmed {
 		window.dimmed = false
 		window.undimAnimation.ReStart()
@@ -140,7 +151,6 @@ func (window *ScreenshotWindow) drawScreenshotBackground(ren *sdl.Renderer) {
 	pkg.CopyTexture(ren, window.screenshotTexture, nil, nil)
 
 	rect := ren.GetViewport()
-
 	var currentDimAlpha uint8
 	if window.dimmed {
 		currentDimAlpha = uint8(window.dimAnimation.CurrentValue())
