@@ -34,6 +34,8 @@ type TextTool struct {
 	isMouseSelecting bool
 	selection        textSelection
 	draggingHandle   textDraggingHandle
+	iBeamCursorSet   bool
+	sizeAllCursorSet bool
 	DefaultScreenshotEditTool
 }
 
@@ -114,7 +116,8 @@ func (tool *TextTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet 
 					y-tool.activeParagraph.TextStart.Y,
 				),
 			)
-			sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_IBEAM))
+			sdl.SetCursor(gui.IBeamCursor)
+			tool.iBeamCursorSet = true
 			return false
 		}
 		if tool.draggingHandle.draggingParagraph != nil {
@@ -122,20 +125,32 @@ func (tool *TextTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet 
 				X: move.X - tool.draggingHandle.xHandleOffset,
 				Y: move.Y - tool.draggingHandle.yHandleOffset,
 			}
-			sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_SIZEALL))
+			sdl.SetCursor(gui.SizeAllCursor)
+			tool.sizeAllCursorSet = true
 			return false
 		}
 		for _, par := range tool.paragraphs {
 			if move.InRect(par.GetBBox()) {
-				sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_IBEAM))
+				sdl.SetCursor(gui.IBeamCursor)
+				tool.iBeamCursorSet = true
 				return false
 			}
 			if move.InRect(par.GetPaddedBBox(paragraphDraggingPadding)) {
-				sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_SIZEALL))
+				sdl.SetCursor(gui.SizeAllCursor)
+				tool.sizeAllCursorSet = true
 				return false
 			}
 		}
-		sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_ARROW))
+
+		if tool.iBeamCursorSet || tool.sizeAllCursorSet {
+			if tool.iBeamCursorSet {
+				tool.iBeamCursorSet = false
+			}
+			if tool.sizeAllCursorSet {
+				tool.sizeAllCursorSet = false
+			}
+			sdl.SetCursor(gui.ArrowCursor)
+		}
 		return false
 	})
 

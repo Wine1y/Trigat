@@ -36,6 +36,7 @@ type ToolsPanel struct {
 	cropTool          editTools.ScreenshotCropTool
 	actionsQueue      *editTools.ActionsQueue
 	onNewToolSelected func(tool editTools.ScreenshotEditTool)
+	handCursorSet     bool
 	panelRect         *sdl.Rect
 }
 
@@ -164,12 +165,15 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 					panel.hoveredAt = sdl.GetTicks64()
 				}
 				panel.hoveredTool = meta
-				sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_HAND))
+				sdl.SetCursor(gui.HandCursor)
+				panel.handCursorSet = true
 				return false
 			}
 		}
 		if panel.hoveredTool != nil {
-			sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_ARROW))
+			if panel.handCursorSet {
+				sdl.SetCursor(gui.ArrowCursor)
+			}
 			if move.InRect(&panel.hoveredTool.settingsBBox) && sdl.GetTicks64()-panel.hoveredAt >= settingsShowDelayMs {
 				return false
 			}

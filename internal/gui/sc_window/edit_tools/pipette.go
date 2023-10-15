@@ -32,11 +32,13 @@ var pipetteWidgetCurrentSquareColor sdl.Color = sdl.Color{R: 0, G: 0, B: 0, A: 2
 var pipetteWidgetCopiedTextColor sdl.Color = sdl.Color{R: 255, G: 255, B: 255, A: 255}
 
 type PipetteTool struct {
-	ren         *sdl.Renderer
-	isDragging  bool
-	widget      pipetteWidget
-	magnifier   pipetteMagnifier
-	deactivated bool
+	ren           *sdl.Renderer
+	isDragging    bool
+	widget        pipetteWidget
+	magnifier     pipetteMagnifier
+	deactivated   bool
+	handCursorSet bool
+	lastCursorPos sdl.Point
 	DefaultScreenshotEditTool
 }
 
@@ -91,10 +93,13 @@ func (tool *PipetteTool) ToolCallbacks(_ *ActionsQueue) *gui.WindowCallbackSet {
 			tool.NewProbe(x, y)
 		}
 		if _, colorHovered := tool.widget.getColorBoxAt(x, y); colorHovered {
-			sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_HAND))
-		} else {
-			sdl.SetCursor(sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_ARROW))
+			sdl.SetCursor(gui.HandCursor)
+			tool.handCursorSet = true
+		} else if tool.handCursorSet {
+			sdl.SetCursor(gui.ArrowCursor)
+			tool.handCursorSet = false
 		}
+		tool.lastCursorPos.X, tool.lastCursorPos.Y = x, y
 		tool.magnifier.newPos(tool.ren, sdl.Point{X: x, Y: y})
 		return false
 	})
@@ -133,7 +138,9 @@ func (tool PipetteTool) RenderScreenshot(_ *sdl.Renderer) {}
 func (tool PipetteTool) RenderCurrentState(ren *sdl.Renderer) {
 	if !tool.deactivated {
 		tool.widget.draw(ren)
-		tool.magnifier.draw(ren)
+		if !tool.lastCursorPos.InRect(&tool.widget.bbox) {
+			tool.magnifier.draw(ren)
+		}
 	}
 }
 

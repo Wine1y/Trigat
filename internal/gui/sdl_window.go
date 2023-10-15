@@ -10,6 +10,10 @@ import (
 )
 
 var TICKS_PER_FRAME uint64 = 1000 / config.GetAppFPS()
+var ArrowCursor *sdl.Cursor = nil
+var HandCursor *sdl.Cursor = nil
+var IBeamCursor *sdl.Cursor = nil
+var SizeAllCursor *sdl.Cursor = nil
 
 type SDLWindow struct {
 	win         *sdl.Window
@@ -31,6 +35,7 @@ func NewSDLWindow(
 	if err := sdl.Init(sdl.INIT_VIDEO); err != nil {
 		panic(err)
 	}
+	loadSystemCursors()
 	if err := ttf.Init(); err != nil {
 		panic(err)
 	}
@@ -156,4 +161,11 @@ func (window SDLWindow) SDLWin() *sdl.Window {
 
 func (window *SDLWindow) Close() {
 	window.shouldClose = true
+}
+
+func loadSystemCursors() {
+	ArrowCursor = sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_ARROW)
+	HandCursor = sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_HAND)
+	IBeamCursor = sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_IBEAM)
+	SizeAllCursor = sdl.CreateSystemCursor(sdl.SYSTEM_CURSOR_SIZEALL)
 }
