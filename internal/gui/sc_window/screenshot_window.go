@@ -3,8 +3,10 @@ package scWindow
 import (
 	"image"
 	"reflect"
+	"time"
 	"unsafe"
 
+	"github.com/Wine1y/trigat/config"
 	"github.com/Wine1y/trigat/internal/gui"
 	"github.com/Wine1y/trigat/pkg"
 	"github.com/Wine1y/trigat/pkg/hotkeys"
@@ -13,13 +15,18 @@ import (
 	hk "golang.design/x/hotkey"
 )
 
-const windowFlags uint32 = sdl.WINDOW_FULLSCREEN_DESKTOP | sdl.WINDOW_ALWAYS_ON_TOP | sdl.WINDOW_SKIP_TASKBAR | sdl.WINDOW_BORDERLESS
+const windowFlags uint32 = sdl.WINDOW_FULLSCREEN_DESKTOP | sdl.WINDOW_ALWAYS_ON_TOP | sdl.WINDOW_SKIP_TASKBAR | sdl.WINDOW_BORDERLESS | sdl.WINDOW_HIDDEN
 
-var dimColor = sdl.Color{R: 0, G: 0, B: 0, A: 100}
+var dimColor = sdl.Color{R: 0, G: 0, B: 0}
+var dimAlpha uint8 = 100
 
 type ScreenshotWindow struct {
 	screenshotTexture *sdl.Texture
 	toolsPanel        *ToolsPanel
+	initAnimation     *pkg.Animation
+	dimAnimation      *pkg.Animation
+	undimAnimation    *pkg.Animation
+	dimmed            bool
 	*gui.SDLWindow
 }
 
@@ -33,7 +40,26 @@ func NewScreenshotWindow() *ScreenshotWindow {
 		panic("Can't create a screenshot surface")
 	}
 	defer screenshotSurface.Free()
-	window := ScreenshotWindow{}
+	window := ScreenshotWindow{
+		dimmed: true,
+		initAnimation: pkg.NewLinearAnimation(
+			0, 100,
+			int(config.GetAppFPS()), time.Millisecond*750,
+			1, false,
+		),
+		dimAnimation: pkg.NewLinearAnimation(
+			0, int(dimAlpha),
+			int(config.GetAppFPS()), time.Millisecond*750,
+			1, false,
+		),
+		undimAnimation: pkg.NewLinearAnimation(
+			int(dimAlpha), 0,
+			int(config.GetAppFPS()), time.Millisecond*750,
+			1, false,
+		),
+	}
+	window.dimAnimation.End()
+	window.undimAnimation.End()
 	sdlWindow := gui.NewSDLWindow(
 		"",
 		640, 480, sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED,
@@ -48,10 +74,17 @@ func NewScreenshotWindow() *ScreenshotWindow {
 	window.toolsPanel = NewToolsPanel(sdlWindow.Renderer())
 	window.screenshotTexture = screenshotTexture
 	window.SDLWindow = sdlWindow
+	window.SDLWin().SetWindowOpacity(0)
+	window.SDLWin().Show()
+	window.render(window.Renderer())
+	window.Renderer().Present()
 	return &window
 }
 
 func (window *ScreenshotWindow) render(ren *sdl.Renderer) {
+	if !window.initAnimation.IsEnded() {
+		window.SDLWin().SetWindowOpacity(float32(window.initAnimation.CurrentValue()) / 100)
+	}
 	window.drawScreenshotBackground(ren)
 	window.toolsPanel.DrawToolsState(ren)
 	window.toolsPanel.DrawPanel(ren)
@@ -89,11 +122,36 @@ func (window *ScreenshotWindow) HotKeys() *hotkeys.HotKeySet {
 	return hotkeys.NewHotKeySet(exitHk)
 }
 
+func (window *ScreenshotWindow) DimBackground() {
+	if !window.dimmed {
+		window.dimmed = true
+		window.dimAnimation.ReStart()
+	}
+}
+
+func (window *ScreenshotWindow) UndimBackground() {
+	if window.dimmed {
+		window.dimmed = false
+		window.undimAnimation.ReStart()
+	}
+}
+
 func (window *ScreenshotWindow) drawScreenshotBackground(ren *sdl.Renderer) {
 	pkg.CopyTexture(ren, window.screenshotTexture, nil, nil)
 
 	rect := ren.GetViewport()
-	pkg.DrawFilledRectangle(ren, &rect, dimColor)
+
+	var currentDimAlpha uint8
+	if window.dimmed {
+		currentDimAlpha = uint8(window.dimAnimation.CurrentValue())
+	} else {
+		currentDimAlpha = uint8(window.undimAnimation.CurrentValue())
+	}
+	pkg.DrawFilledRectangle(
+		ren,
+		&rect,
+		sdl.Color{R: dimColor.R, G: dimColor.G, B: dimColor.B, A: currentDimAlpha},
+	)
 }
 
 func takeScreenshot() (*image.RGBA, error) {

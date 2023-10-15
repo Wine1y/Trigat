@@ -42,10 +42,6 @@ func NewSDLWindow(
 	if err != nil {
 		panic(err)
 	}
-	//Made to avoid unrendered empty frame when starting the app
-	win.SetWindowOpacity(0)
-	win.Show()
-
 	return &SDLWindow{
 		win:       win,
 		ren:       ren,
@@ -55,9 +51,6 @@ func NewSDLWindow(
 }
 
 func (window *SDLWindow) StartMainLoop() {
-	window.render(window.ren)
-	window.ren.Present()
-	window.win.SetWindowOpacity(1)
 	lastTick := sdl.GetTicks64()
 	for {
 		window.shouldClose = window.handleEvents()

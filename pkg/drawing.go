@@ -76,13 +76,20 @@ func CopyTexture(ren *sdl.Renderer, texture *sdl.Texture, dst *sdl.Rect, blendMo
 }
 
 func ReadRGBA32(ren *sdl.Renderer, rect *sdl.Rect) []uint8 {
-	pixels := make([]uint8, rect.W*rect.H*4)
+	var rectW, rectH int32
+	if rect != nil {
+		rectW, rectH = rect.W, rect.H
+	} else {
+		vp := ren.GetViewport()
+		rectW, rectH = vp.W, vp.H
+	}
+	pixels := make([]uint8, rectW*rectH*4)
 	sh := (*reflect.SliceHeader)(unsafe.Pointer(&pixels))
 	err := ren.ReadPixels(
 		rect,
 		uint32(sdl.PIXELFORMAT_RGBA32),
 		unsafe.Pointer(sh.Data),
-		int(rect.W*4),
+		int(rectW*4),
 	)
 	if err != nil {
 		panic(err)
