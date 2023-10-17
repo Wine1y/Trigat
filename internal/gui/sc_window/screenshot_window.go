@@ -71,14 +71,14 @@ func NewScreenshotWindow() *ScreenshotWindow {
 		window.callbackSet,
 	)
 	window.SDLWindow = sdlWindow
-	screenshotTexture, err := sdlWindow.Renderer().CreateTextureFromSurface(screenshotSurface)
-	if err != nil {
-		panic("Can't create a screenshot texure")
-	}
-	window.screenshotTexture = screenshotTexture
+	window.screenshotTexture = pkg.CreateTextureFromSurface(window.Renderer(), screenshotSurface)
 	window.SDLWin().SetWindowOpacity(0)
 	window.SDLWin().Show()
-	window.toolsPanel = NewToolsPanel(window.Renderer(), window.onNewToolSelected)
+	window.toolsPanel = NewToolsPanel(
+		window.Renderer(),
+		window.onNewToolSelected,
+		window.saveImage, window.copyImage, window.searchImage,
+	)
 	window.render(window.Renderer())
 	window.Renderer().Present()
 	return &window
@@ -145,6 +145,18 @@ func (window *ScreenshotWindow) undimBackground() {
 		window.dimmed = false
 		window.undimAnimation.ReStart()
 	}
+}
+
+func (window ScreenshotWindow) saveImage() {
+	panic("Not implemented")
+}
+
+func (window ScreenshotWindow) copyImage() {
+	panic("Not implemented")
+}
+
+func (window ScreenshotWindow) searchImage() {
+	panic("Not implemented")
 }
 
 func (window *ScreenshotWindow) drawScreenshotBackground(ren *sdl.Renderer) {

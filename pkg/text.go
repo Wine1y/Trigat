@@ -37,12 +37,8 @@ func NewStringTexture(ren *sdl.Renderer, font *ttf.Font, text string, color sdl.
 		panic(err)
 	}
 	defer surface.Free()
-	texture, err := ren.CreateTextureFromSurface(surface)
-	if err != nil {
-		panic(err)
-	}
 	return &StringTexture{
-		Texture:    texture,
+		Texture:    CreateTextureFromSurface(ren, surface),
 		TextWidth:  surface.W,
 		TextHeight: surface.H,
 	}

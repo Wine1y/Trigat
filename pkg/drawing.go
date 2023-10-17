@@ -68,6 +68,14 @@ func DrawThickCircle(ren *sdl.Renderer, center *sdl.Point, radius int32, width i
 	}
 }
 
+func CreateTextureFromSurface(ren *sdl.Renderer, surface *sdl.Surface) *sdl.Texture {
+	texture, err := ren.CreateTextureFromSurface(surface)
+	if err != nil {
+		panic(err)
+	}
+	return texture
+}
+
 func CopyTexture(ren *sdl.Renderer, texture *sdl.Texture, dst *sdl.Rect, blendMode *sdl.BlendMode) {
 	if blendMode != nil {
 		texture.SetBlendMode(*blendMode)

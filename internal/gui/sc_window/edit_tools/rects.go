@@ -14,7 +14,7 @@ type RectsTool struct {
 	isDragging          bool
 	isShiftPressed      bool
 	rects               []rect
-	lastCursorPos       *sdl.Point
+	lastCursorPos       sdl.Point
 	rectBorderThickness int32
 	rectColor           sdl.Color
 	settings            []settings.ToolSetting
@@ -55,7 +55,6 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 		if button != sdl.BUTTON_LEFT {
 			return false
 		}
-		tool.lastCursorPos = &sdl.Point{X: x, Y: y}
 		tool.rects = append(
 			tool.rects,
 			rect{
@@ -77,7 +76,7 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 				pkg.RectIntoSquare(rect)
 			}
 		}
-		tool.lastCursorPos = &sdl.Point{X: x, Y: y}
+		tool.lastCursorPos.X, tool.lastCursorPos.Y = x, y
 		return false
 	})
 
@@ -85,7 +84,6 @@ func (tool *RectsTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 		if button != sdl.BUTTON_LEFT || !tool.isDragging {
 			return false
 		}
-		tool.lastCursorPos = &sdl.Point{X: x, Y: y}
 		tool.isDragging = false
 		queue.Push(RectAction{tool: tool, lastRect: tool.rects[len(tool.rects)-1]})
 		return false

@@ -40,8 +40,12 @@ type ToolsPanel struct {
 	panelRect         *sdl.Rect
 }
 
-func NewToolsPanel(ren *sdl.Renderer, onNewToolSelected func(tool editTools.ScreenshotEditTool)) *ToolsPanel {
-	selectionTool := editTools.NewSelectionTool(ren)
+func NewToolsPanel(
+	ren *sdl.Renderer,
+	onNewToolSelected func(tool editTools.ScreenshotEditTool),
+	saveCallback, copyCallback, searchCallback func(),
+) *ToolsPanel {
+	selectionTool := editTools.NewSelectionTool(ren, saveCallback, copyCallback, searchCallback)
 	tools := []editTools.ScreenshotEditTool{
 		selectionTool,
 		editTools.NewPaintTool(),
@@ -273,13 +277,9 @@ type toolMeta struct {
 }
 
 func newToolMeta(tool editTools.ScreenshotEditTool, ren *sdl.Renderer) toolMeta {
-	texture, err := ren.CreateTextureFromSurface(tool.ToolIcon())
-	if err != nil {
-		panic(err)
-	}
 	return toolMeta{
 		tool:     tool,
 		iconBBox: sdl.Rect{},
-		texture:  texture,
+		texture:  pkg.CreateTextureFromSurface(ren, tool.ToolIcon()),
 	}
 }

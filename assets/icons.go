@@ -29,3 +29,15 @@ var SelectionIcon = pkg.LoadPNGSurface(selectionIconData)
 //go:embed icons/text_tool.png
 var textIconData []byte
 var TextIcon = pkg.LoadPNGSurface(textIconData)
+
+//go:embed icons/copy_action.png
+var copyIconData []byte
+var CopyIcon = pkg.LoadPNGSurface(copyIconData)
+
+//go:embed icons/save_action.png
+var saveIconData []byte
+var SaveIcon = pkg.LoadPNGSurface(saveIconData)
+
+//go:embed icons/search_action.png
+var searchIconData []byte
+var SearchIcon = pkg.LoadPNGSurface(searchIconData)

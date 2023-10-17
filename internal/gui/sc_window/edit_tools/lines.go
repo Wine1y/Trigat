@@ -15,7 +15,7 @@ type LinesTool struct {
 	isDragging     bool
 	isShiftPressed bool
 	lines          []line
-	lastCursorPos  *sdl.Point
+	lastCursorPos  sdl.Point
 	lineThickness  int32
 	lineColor      sdl.Color
 	settings       []settings.ToolSetting
@@ -55,7 +55,6 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 		if button != sdl.BUTTON_LEFT {
 			return false
 		}
-		tool.lastCursorPos = &sdl.Point{X: x, Y: y}
 		tool.isDragging = true
 		newLine := line{
 			points:    [2]sdl.Point{{X: x, Y: y}, {X: x, Y: y}},
@@ -70,7 +69,6 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 		if button != sdl.BUTTON_LEFT || !tool.isDragging {
 			return false
 		}
-		tool.lastCursorPos = &sdl.Point{X: x, Y: y}
 		tool.isDragging = false
 		line := &tool.lines[len(tool.lines)-1]
 		if tool.isShiftPressed {
@@ -84,7 +82,7 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 
 	callbacks.MouseMove = append(callbacks.MouseMove, func(x, y int32) bool {
 		if tool.isDragging {
-			tool.lastCursorPos = &sdl.Point{X: x, Y: y}
+			tool.lastCursorPos.X, tool.lastCursorPos.Y = x, y
 			line := &tool.lines[len(tool.lines)-1]
 			if tool.isShiftPressed {
 				line.points[1] = closestStraightLinePoint(line.points[0], sdl.Point{X: x, Y: y})
@@ -112,9 +110,9 @@ func (tool *LinesTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet
 			return false
 		}
 		tool.isShiftPressed = false
-		if tool.isDragging && tool.lastCursorPos != nil {
+		if tool.isDragging {
 			line := &tool.lines[len(tool.lines)-1]
-			line.points[1] = *tool.lastCursorPos
+			line.points[1] = tool.lastCursorPos
 		}
 		return false
 	})
