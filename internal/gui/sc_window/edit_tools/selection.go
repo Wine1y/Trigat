@@ -145,11 +145,6 @@ func (tool *SelectionTool) updateTooltips() {
 	tool.actionsTooltip.updateTooltip(tool.selection)
 }
 
-func (tool *SelectionTool) drawTooltips(ren *sdl.Renderer) {
-	tool.sizeTooltip.draw(ren)
-	tool.actionsTooltip.draw(ren)
-}
-
 func (tool *SelectionTool) destroyTooltips() {
 	tool.sizeTooltip.destroy()
 	tool.actionsTooltip.destroy()
@@ -160,8 +155,9 @@ func (tool SelectionTool) RenderCurrentState(ren *sdl.Renderer) {
 		sel := tool.selection
 		pkg.DrawFilledRectangle(ren, sel, selectionFillColor)
 		pkg.DrawThickRectangle(ren, sel, selectionThickness, selectionBorderColor)
-		tool.drawTooltips(ren)
+		tool.sizeTooltip.draw(ren)
 	}
+	tool.actionsTooltip.draw(ren)
 }
 
 func (tool SelectionTool) RenderScreenshot(_ *sdl.Renderer) {}
@@ -249,19 +245,24 @@ type selectionActionsTooltip struct {
 }
 
 func NewSelectionActionsTooltip(ren *sdl.Renderer, saveCallback, copyCallback, searchCallback func()) *selectionActionsTooltip {
-	return &selectionActionsTooltip{
+	tooltip := selectionActionsTooltip{
 		actions: []*tooltipAction{
 			{texture: pkg.CreateTextureFromSurface(ren, assets.SearchIcon), callback: searchCallback},
 			{texture: pkg.CreateTextureFromSurface(ren, assets.CopyIcon), callback: copyCallback},
 			{texture: pkg.CreateTextureFromSurface(ren, assets.SaveIcon), callback: saveCallback},
 		},
 	}
+
+	vp := ren.GetViewport()
+	tooltip.bbox.W = int32(len(tooltip.actions))*actionIconSize + int32(len(tooltip.actions)-1)*actionMargin + selectionTooltipPadding*2
+	tooltip.bbox.H = actionIconSize + selectionTooltipPadding*2
+	tooltip.bbox.X = vp.W - tooltip.bbox.W - selectionTooltipMargin
+	tooltip.bbox.Y = selectionTooltipMargin
+	tooltip.updateActionsPositions()
+	return &tooltip
 }
 
 func (tooltip *selectionActionsTooltip) updateTooltip(selection *sdl.Rect) {
-	tooltip.bbox.W = int32(len(tooltip.actions))*actionIconSize + int32(len(tooltip.actions)-1)*actionMargin + selectionTooltipPadding*2
-	tooltip.bbox.H = actionIconSize + selectionTooltipPadding*2
-
 	tooltip.bbox.X = selection.X + selection.W - tooltip.bbox.W
 	if selection.W < 0 {
 		tooltip.bbox.X = selection.X - tooltip.bbox.W
@@ -279,7 +280,10 @@ func (tooltip *selectionActionsTooltip) updateTooltip(selection *sdl.Rect) {
 	} else {
 		tooltip.inSelection = false
 	}
+	tooltip.updateActionsPositions()
+}
 
+func (tooltip *selectionActionsTooltip) updateActionsPositions() {
 	for i := int32(0); i < int32(len(tooltip.actions)); i++ {
 		action := tooltip.actions[i]
 		action.bbox.X = tooltip.bbox.X + i*actionIconSize + i*actionMargin + selectionTooltipPadding
