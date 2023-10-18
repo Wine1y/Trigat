@@ -3,9 +3,11 @@ module github.com/Wine1y/trigat
 go 1.19
 
 require (
+	github.com/chai2010/webp v1.1.1
 	github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237
 	github.com/veandco/go-sdl2 v0.4.35
 	golang.design/x/hotkey v0.4.1
+	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 )
 
 require (

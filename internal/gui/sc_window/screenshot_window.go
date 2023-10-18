@@ -2,6 +2,7 @@ package scWindow
 
 import (
 	"image"
+	"os"
 	"reflect"
 	"time"
 	"unsafe"
@@ -107,12 +108,18 @@ func (window *ScreenshotWindow) callbackSet() *gui.WindowCallbackSet {
 			window.toolsPanel.RenderScreenshot(ren)
 			surface := readRenderIntoSurface(ren)
 			croppedSurface := window.toolsPanel.CropScreenshot(surface)
-			croppedSurface.SaveBMP("C:\\Users\\Q\\Desktop\\trigat_screen.bmp")
-			if croppedSurface != surface {
-				croppedSurface.Free()
-			}
-			surface.Free()
 			window.Close()
+			go func() {
+				png, err := os.Create("C:\\Users\\Q\\Desktop\\trigat_screenshot.png")
+				if err != nil {
+					panic(err)
+				}
+				pkg.WriteSurfaceToPNG(croppedSurface, png)
+				if croppedSurface != surface {
+					croppedSurface.Free()
+				}
+				surface.Free()
+			}()
 		}
 		return false
 	})
