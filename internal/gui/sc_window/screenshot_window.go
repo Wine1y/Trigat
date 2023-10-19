@@ -18,7 +18,7 @@ import (
 	hk "golang.design/x/hotkey"
 )
 
-const windowFlags uint32 = sdl.WINDOW_FULLSCREEN_DESKTOP | sdl.WINDOW_ALWAYS_ON_TOP | sdl.WINDOW_SKIP_TASKBAR | sdl.WINDOW_BORDERLESS | sdl.WINDOW_HIDDEN
+const windowFlags uint32 = sdl.WINDOW_FULLSCREEN_DESKTOP | sdl.WINDOW_SKIP_TASKBAR | sdl.WINDOW_BORDERLESS | sdl.WINDOW_HIDDEN
 
 var dimColor = sdl.Color{R: 0, G: 0, B: 0}
 var dimAlpha uint8 = 100
@@ -104,24 +104,7 @@ func (window *ScreenshotWindow) callbackSet() *gui.WindowCallbackSet {
 	})
 	set.KeyDown = append(set.KeyDown, func(keysym sdl.Keysym) bool {
 		if keysym.Sym == sdl.K_s && (keysym.Mod&sdl.KMOD_CTRL) != 0 {
-			ren := window.Renderer()
-			pkg.CopyTexture(ren, window.screenshotTexture, nil, nil)
-			window.toolsPanel.RenderScreenshot(ren)
-			pixels, surface := readRenderIntoSurface(ren)
-			croppedSurface := window.toolsPanel.CropScreenshot(surface)
-			window.Close()
-			go func() {
-				png, err := os.Create("C:\\Users\\Q\\Desktop\\trigat_screenshot.png")
-				if err != nil {
-					panic(err)
-				}
-				pkg.WriteSurfaceToPNG(croppedSurface, png)
-				if croppedSurface != surface {
-					croppedSurface.Free()
-				}
-				surface.Free()
-				runtime.KeepAlive(pixels)
-			}()
+			window.saveImage()
 		}
 		return false
 	})
@@ -156,8 +139,29 @@ func (window *ScreenshotWindow) undimBackground() {
 	}
 }
 
-func (window ScreenshotWindow) saveImage() {
-	panic("Not implemented")
+func (window *ScreenshotWindow) saveImage() {
+	savingOptions, success := pkg.RequestSavingOptions("Saving screenshot", "screenshot")
+	if !success {
+		return
+	}
+	ren := window.Renderer()
+	pkg.CopyTexture(ren, window.screenshotTexture, nil, nil)
+	window.toolsPanel.RenderScreenshot(ren)
+	pixels, surface := readRenderIntoSurface(ren)
+	croppedSurface := window.toolsPanel.CropScreenshot(surface)
+	window.Close()
+	go func() {
+		file, err := os.Create(savingOptions.Filepath)
+		if err != nil {
+			panic(err)
+		}
+		savingOptions.Method.WritingFunction(croppedSurface, file)
+		if croppedSurface != surface {
+			croppedSurface.Free()
+		}
+		surface.Free()
+		runtime.KeepAlive(pixels)
+	}()
 }
 
 func (window ScreenshotWindow) copyImage() {
