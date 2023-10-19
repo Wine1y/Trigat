@@ -163,23 +163,23 @@ func (tool SelectionTool) RenderCurrentState(ren *sdl.Renderer) {
 func (tool SelectionTool) RenderScreenshot(_ *sdl.Renderer) {}
 
 func (tool SelectionTool) CropScreenshot(surface *sdl.Surface) *sdl.Surface {
-	if tool.selection != nil {
-		sel := tool.selection
-		croppedSurface, err := sdl.CreateRGBSurface(
-			0,
-			sel.W, sel.H,
-			int32(surface.Format.BitsPerPixel),
-			surface.Format.Rmask, surface.Format.Gmask, surface.Format.Bmask, surface.Format.Amask,
-		)
-		if err != nil {
-			panic(err)
-		}
-		if err := surface.Blit(sel, croppedSurface, nil); err != nil {
-			panic(err)
-		}
-		return croppedSurface
+	if tool.selection == nil {
+		return surface
 	}
-	return surface
+	rect := selectionToBlitRect(tool.selection)
+	croppedSurface, err := sdl.CreateRGBSurface(
+		0,
+		rect.W, rect.H,
+		int32(surface.Format.BitsPerPixel),
+		surface.Format.Rmask, surface.Format.Gmask, surface.Format.Bmask, surface.Format.Amask,
+	)
+	if err != nil {
+		panic(err)
+	}
+	if err := surface.Blit(rect, croppedSurface, nil); err != nil {
+		panic(err)
+	}
+	return croppedSurface
 }
 
 type selectionSizeTooltip struct {
@@ -329,4 +329,17 @@ type tooltipAction struct {
 	texture  *sdl.Texture
 	bbox     sdl.Rect
 	callback func()
+}
+
+func selectionToBlitRect(selection *sdl.Rect) *sdl.Rect {
+	x, y := selection.X, selection.Y
+	if selection.W < 0 {
+		x += selection.W
+	}
+	if selection.H < 0 {
+		y += selection.H
+	}
+	return &sdl.Rect{
+		X: x, Y: y, W: pkg.Abs(selection.W), H: pkg.Abs(selection.H),
+	}
 }

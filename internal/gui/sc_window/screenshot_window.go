@@ -4,6 +4,7 @@ import (
 	"image"
 	"os"
 	"reflect"
+	"runtime"
 	"time"
 	"unsafe"
 
@@ -106,7 +107,7 @@ func (window *ScreenshotWindow) callbackSet() *gui.WindowCallbackSet {
 			ren := window.Renderer()
 			pkg.CopyTexture(ren, window.screenshotTexture, nil, nil)
 			window.toolsPanel.RenderScreenshot(ren)
-			surface := readRenderIntoSurface(ren)
+			pixels, surface := readRenderIntoSurface(ren)
 			croppedSurface := window.toolsPanel.CropScreenshot(surface)
 			window.Close()
 			go func() {
@@ -119,6 +120,7 @@ func (window *ScreenshotWindow) callbackSet() *gui.WindowCallbackSet {
 					croppedSurface.Free()
 				}
 				surface.Free()
+				runtime.KeepAlive(pixels)
 			}()
 		}
 		return false
@@ -206,7 +208,7 @@ func getScreenshotSurface(screenshot *image.RGBA) (*sdl.Surface, error) {
 	return screenshotSurface, nil
 }
 
-func readRenderIntoSurface(ren *sdl.Renderer) *sdl.Surface {
+func readRenderIntoSurface(ren *sdl.Renderer) (surfaceData *[]byte, surface *sdl.Surface) {
 	vp := ren.GetViewport()
 	pitch := int(vp.W) * 4
 	pixels := pkg.ReadRGBA32(ren, nil)
@@ -222,5 +224,5 @@ func readRenderIntoSurface(ren *sdl.Renderer) *sdl.Surface {
 	if err != nil {
 		panic(err)
 	}
-	return surface
+	return &pixels, surface
 }
