@@ -237,6 +237,7 @@ func (tool *TextTool) ToolCallbacks(queue *ActionsQueue) *gui.WindowCallbackSet 
 		case keysym.Sym == sdl.K_c && (keysym.Mod&sdl.KMOD_CTRL != 0) && tool.selection.selected:
 			selStart, selEnd := tool.selection.selectionBounds()
 			sdl.SetClipboardText(string(activePar.Text[selStart:selEnd]))
+			return true
 		case keysym.Sym == sdl.K_v && (keysym.Mod&sdl.KMOD_CTRL != 0):
 			cbString, err := sdl.GetClipboardText()
 			if err != nil {

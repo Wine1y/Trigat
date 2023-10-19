@@ -1,6 +1,7 @@
 package scWindow
 
 import (
+	"bytes"
 	"image"
 	"os"
 	"reflect"
@@ -15,6 +16,7 @@ import (
 	"github.com/Wine1y/trigat/pkg/hotkeys"
 	"github.com/kbinani/screenshot"
 	"github.com/veandco/go-sdl2/sdl"
+	"golang.design/x/clipboard"
 	hk "golang.design/x/hotkey"
 )
 
@@ -95,6 +97,18 @@ func (window *ScreenshotWindow) render(ren *sdl.Renderer) {
 	window.toolsPanel.DrawPanel(ren)
 }
 
+func (window ScreenshotWindow) renderScreenshot() (*[]byte, *sdl.Surface) {
+	ren := window.Renderer()
+	pkg.CopyTexture(ren, window.screenshotTexture, nil, nil)
+	window.toolsPanel.RenderScreenshot(ren)
+	pixels, surface := readRenderIntoSurface(ren)
+	croppedSurface := window.toolsPanel.CropScreenshot(surface)
+	if croppedSurface != surface {
+		surface.Free()
+	}
+	return pixels, croppedSurface
+}
+
 func (window *ScreenshotWindow) callbackSet() *gui.WindowCallbackSet {
 	set := gui.NewWindowCallbackSet()
 	window.toolsPanel.SetToolsCallbacks(set)
@@ -105,6 +119,11 @@ func (window *ScreenshotWindow) callbackSet() *gui.WindowCallbackSet {
 	set.KeyDown = append(set.KeyDown, func(keysym sdl.Keysym) bool {
 		if keysym.Sym == sdl.K_s && (keysym.Mod&sdl.KMOD_CTRL) != 0 {
 			window.saveImage()
+			return true
+		}
+		if keysym.Sym == sdl.K_c && (keysym.Mod&sdl.KMOD_CTRL) != 0 {
+			window.copyImage()
+			return true
 		}
 		return false
 	})
@@ -144,31 +163,33 @@ func (window *ScreenshotWindow) saveImage() {
 	if !success {
 		return
 	}
-	ren := window.Renderer()
-	pkg.CopyTexture(ren, window.screenshotTexture, nil, nil)
-	window.toolsPanel.RenderScreenshot(ren)
-	pixels, surface := readRenderIntoSurface(ren)
-	croppedSurface := window.toolsPanel.CropScreenshot(surface)
+	pixels, surface := window.renderScreenshot()
 	window.Close()
 	go func() {
 		file, err := os.Create(savingOptions.Filepath)
 		if err != nil {
 			panic(err)
 		}
-		savingOptions.Method.WritingFunction(croppedSurface, file)
-		if croppedSurface != surface {
-			croppedSurface.Free()
-		}
+		savingOptions.Method.WritingFunction(surface, file)
+		surface.Free()
+		file.Close()
+		runtime.KeepAlive(pixels)
+	}()
+}
+
+func (window *ScreenshotWindow) copyImage() {
+	pixels, surface := window.renderScreenshot()
+	window.Close()
+	go func() {
+		buf := bytes.NewBuffer(make([]byte, 0, surface.W*surface.H))
+		pkg.WriteSurfaceToPNG(surface, buf)
+		clipboard.Write(clipboard.FmtImage, buf.Bytes())
 		surface.Free()
 		runtime.KeepAlive(pixels)
 	}()
 }
 
-func (window ScreenshotWindow) copyImage() {
-	panic("Not implemented")
-}
-
-func (window ScreenshotWindow) searchImage() {
+func (window *ScreenshotWindow) searchImage() {
 	panic("Not implemented")
 }
 
