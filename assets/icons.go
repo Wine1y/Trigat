@@ -41,3 +41,6 @@ var SaveIcon = pkg.LoadPNGSurface(saveIconData)
 //go:embed icons/search_action.png
 var searchIconData []byte
 var SearchIcon = pkg.LoadPNGSurface(searchIconData)
+
+//go:embed icons/trigat_icon.ico
+var TrigatIconData []byte

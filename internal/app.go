@@ -1,19 +1,31 @@
 package internal
 
 import (
+	"github.com/Wine1y/trigat/assets"
 	"github.com/Wine1y/trigat/internal/gui"
 	"github.com/Wine1y/trigat/pkg/hotkeys"
+	"github.com/getlantern/systray"
 )
 
 type App struct {
 	currentWindow  gui.Window
 	defaultHotKeys *hotkeys.HotKeySet
 	currentHotKeys *hotkeys.HotKeySet
+	exitCh         chan struct{}
+}
+
+func NewApp() *App {
+	return &App{
+		exitCh: make(chan struct{}),
+	}
 }
 
 func (app *App) Start(defaultHotKeys *hotkeys.HotKeySet) {
+	go app.startSystemTray()
 	app.defaultHotKeys = defaultHotKeys
 	app.setHotkeys(app.defaultHotKeys)
+	println("App started")
+	<-app.exitCh
 }
 
 func (app *App) OpenWindow(window gui.Window) {
@@ -37,4 +49,23 @@ func (app *App) setHotkeys(hotkeys *hotkeys.HotKeySet) {
 		panic("Can't activate hotkeys")
 	}
 	app.currentHotKeys = hotkeys
+}
+
+func (app *App) Close() {
+	systray.Quit()
+	app.exitCh <- struct{}{}
+}
+
+func (app *App) startSystemTray() {
+	systray.Run(app.onTrayStart, func() {})
+}
+
+func (app *App) onTrayStart() {
+	systray.SetIcon(assets.TrigatIconData)
+	systray.SetTooltip("Trigat")
+	exitItem := systray.AddMenuItem("Exit", "Close the app")
+	go func() {
+		<-exitItem.ClickedCh
+		app.Close()
+	}()
 }

@@ -10,8 +10,7 @@ import (
 )
 
 func main() {
-	app := internal.App{}
-	stopChan := make(chan bool)
+	app := internal.NewApp()
 
 	screenshotCb := func() {
 		screenshotWindow := scWindow.NewScreenshotWindow()
@@ -19,15 +18,9 @@ func main() {
 		screenshotWindow = nil
 		runtime.GC()
 	}
-	exitCb := func() {
-		stopChan <- true
-	}
 
 	screenshotHk := hotkeys.NewHotKey(hk.KeyS, nil, &screenshotCb, nil)
-	exitHk := hotkeys.NewHotKey(hk.KeyQ, nil, &exitCb, nil)
-	defaultHotKeys := hotkeys.NewHotKeySet(screenshotHk, exitHk)
+	defaultHotKeys := hotkeys.NewHotKeySet(screenshotHk)
 
 	app.Start(defaultHotKeys)
-	println("App started")
-	<-stopChan
 }
