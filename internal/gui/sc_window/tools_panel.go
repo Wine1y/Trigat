@@ -7,7 +7,7 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-const iconSize int32 = 32
+const iconSize int32 = 38
 const iconPadding int32 = 16
 const iconMargin int32 = 10
 const panelPadding int32 = 6
@@ -126,10 +126,9 @@ func (panel ToolsPanel) DrawPanel(ren *sdl.Renderer) {
 			meta.texture.SetColorMod(0, 0, 0)
 		}
 		if toolColor := meta.tool.ToolColor(); toolColor != nil {
-			pkg.DrawRoundedFilledRectangle(
+			pkg.DrawFilledRectangle(
 				ren,
 				meta.colorBBox,
-				2,
 				*toolColor,
 			)
 		}
