@@ -11,6 +11,8 @@ github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237 h1:YOp8St+CM/AQ
 github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237/go.mod h1:e7qQlOY68wOz4b82D7n+DdaptZAi+SHW0+yKiWZzEYE=
 github.com/lxn/win v0.0.0-20210218163916-a377121e959e h1:H+t6A/QJMbhCSEH5rAuRxh+CtW96g0Or0Fxa9IKr4uc=
 github.com/lxn/win v0.0.0-20210218163916-a377121e959e/go.mod h1:KxxjdtRkfNoYDCUP5ryK7XJJNTnpC8atvtmTheChOtk=
+github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 h1:KoWmjvw+nsYOo29YJK9vDA65RGE3NrOnUtO7a+RF9HU=
+github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8/go.mod h1:HKlIX3XHQyzLZPlr7++PzdhaXEj94dEiJgZDTsxEqUI=
 github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf h1:pCxn3BCfu8n8VUhYl4zS1BftoZoYY0J4qVF3dqAQ4aU=
 github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf/go.mod h1:/qNPSY91qTz/8TgHEMioAUc6q7+3SOybeKczHMXFcXw=
 github.com/veandco/go-sdl2 v0.4.35 h1:NohzsfageDWGtCd9nf7Pc3sokMK/MOK+UA2QMJARWzQ=
@@ -49,6 +51,7 @@ golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20201018230417-eeed37f84f13/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20210616045830-e2b7044e8c71/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

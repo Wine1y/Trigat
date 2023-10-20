@@ -125,6 +125,10 @@ func (window *ScreenshotWindow) callbackSet() *gui.WindowCallbackSet {
 			window.copyImage()
 			return true
 		}
+		if keysym.Sym == sdl.K_g && (keysym.Mod&sdl.KMOD_CTRL) != 0 {
+			window.searchImage()
+			return true
+		}
 		return false
 	})
 	return set
@@ -190,7 +194,19 @@ func (window *ScreenshotWindow) copyImage() {
 }
 
 func (window *ScreenshotWindow) searchImage() {
-	panic("Not implemented")
+	pixels, surface := window.renderScreenshot()
+	window.Close()
+	go func() {
+		buf := bytes.NewBuffer(make([]byte, 0, surface.W*surface.H))
+		pkg.WriteSurfaceToPNG(surface, buf)
+		imageUrl, err := pkg.UploadImage(buf)
+		if err != nil {
+			panic(err)
+		}
+		pkg.OpenUrlInBrowser(pkg.GetSearchURL(imageUrl))
+		surface.Free()
+		runtime.KeepAlive(pixels)
+	}()
 }
 
 func (window *ScreenshotWindow) drawScreenshotBackground(ren *sdl.Renderer) {

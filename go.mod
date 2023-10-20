@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/chai2010/webp v1.1.1
 	github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237
+	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf
 	github.com/veandco/go-sdl2 v0.4.35
 	golang.design/x/clipboard v0.7.0
