@@ -85,6 +85,7 @@ func NewScreenshotWindow() *ScreenshotWindow {
 	)
 	window.render(window.Renderer())
 	window.Renderer().Present()
+	window.SDLWin().Raise()
 	return &window
 }
 
