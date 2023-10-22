@@ -2,6 +2,7 @@ package gui
 
 import (
 	"runtime"
+	"time"
 	"unicode/utf8"
 
 	"github.com/Wine1y/trigat/config"
@@ -9,7 +10,9 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
-var TICKS_PER_FRAME uint64 = 1000 / config.GetAppFPS()
+const WINDOWSIZE_FULLSCREEN int32 = 0
+
+var MILLISECONDS_PER_FRAME int64 = 1000 / int64(config.GetAppFPS())
 var ArrowCursor *sdl.Cursor = nil
 var HandCursor *sdl.Cursor = nil
 var IBeamCursor *sdl.Cursor = nil
@@ -39,6 +42,20 @@ func NewSDLWindow(
 	if err := ttf.Init(); err != nil {
 		panic(err)
 	}
+
+	if width == WINDOWSIZE_FULLSCREEN || height == WINDOWSIZE_FULLSCREEN {
+		displayMode, err := sdl.GetCurrentDisplayMode(0)
+		if err != nil {
+			panic(err)
+		}
+		if width == WINDOWSIZE_FULLSCREEN {
+			width = displayMode.W
+		}
+		if height == WINDOWSIZE_FULLSCREEN {
+			height = displayMode.H
+		}
+	}
+
 	win, err := sdl.CreateWindow(title, x, y, width, height, flags|sdl.WINDOW_HIDDEN)
 	if err != nil {
 		panic(err)
@@ -56,7 +73,7 @@ func NewSDLWindow(
 }
 
 func (window *SDLWindow) StartMainLoop() {
-	lastTick := sdl.GetTicks64()
+	lastTick := time.Now()
 	for {
 		window.shouldClose = window.handleEvents()
 		if window.shouldClose {
@@ -64,11 +81,11 @@ func (window *SDLWindow) StartMainLoop() {
 		}
 		window.render(window.ren)
 		window.ren.Present()
-		ticksPassed := sdl.GetTicks64() - lastTick
-		if ticksPassed < TICKS_PER_FRAME {
-			sdl.Delay(uint32(TICKS_PER_FRAME - ticksPassed))
+		msPassed := time.Since(lastTick).Milliseconds()
+		if msPassed < MILLISECONDS_PER_FRAME {
+			time.Sleep(time.Millisecond * time.Duration(MILLISECONDS_PER_FRAME-msPassed))
 		}
-		lastTick = sdl.GetTicks64()
+		lastTick = time.Now()
 	}
 	for _, cb := range window.callbacks().Quit {
 		if cb() {

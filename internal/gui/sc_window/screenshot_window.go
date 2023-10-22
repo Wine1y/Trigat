@@ -20,7 +20,7 @@ import (
 	hk "golang.design/x/hotkey"
 )
 
-const windowFlags uint32 = sdl.WINDOW_FULLSCREEN_DESKTOP | sdl.WINDOW_SKIP_TASKBAR | sdl.WINDOW_BORDERLESS | sdl.WINDOW_HIDDEN
+const windowFlags uint32 = sdl.WINDOW_SKIP_TASKBAR | sdl.WINDOW_BORDERLESS | sdl.WINDOW_HIDDEN
 
 var dimColor = sdl.Color{R: 0, G: 0, B: 0}
 var dimAlpha uint8 = 100
@@ -40,11 +40,11 @@ type ScreenshotWindow struct {
 func NewScreenshotWindow() *ScreenshotWindow {
 	screenImage, err := takeScreenshot()
 	if err != nil {
-		panic("Can't take a screenshot")
+		panic(err)
 	}
 	screenshotSurface, err := getScreenshotSurface(screenImage)
 	if err != nil {
-		panic("Can't create a screenshot surface")
+		panic(err)
 	}
 	defer screenshotSurface.Free()
 	window := ScreenshotWindow{
@@ -67,9 +67,10 @@ func NewScreenshotWindow() *ScreenshotWindow {
 	}
 	window.dimAnimation.End()
 	window.undimAnimation.End()
+
 	sdlWindow := gui.NewSDLWindow(
 		"",
-		640, 480, sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED,
+		gui.WINDOWSIZE_FULLSCREEN, gui.WINDOWSIZE_FULLSCREEN, sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED,
 		windowFlags,
 		window.render,
 		window.callbackSet,
@@ -164,11 +165,13 @@ func (window *ScreenshotWindow) undimBackground() {
 }
 
 func (window *ScreenshotWindow) saveImage() {
+	pixels, surface := window.renderScreenshot()
 	savingOptions, success := pkg.RequestSavingOptions("Saving screenshot", "screenshot")
+
 	if !success {
+		surface.Free()
 		return
 	}
-	pixels, surface := window.renderScreenshot()
 	window.Close()
 	go func() {
 		file, err := os.Create(savingOptions.Filepath)

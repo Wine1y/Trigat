@@ -32,7 +32,8 @@ type StringTexture struct {
 }
 
 func NewStringTexture(ren *sdl.Renderer, font *ttf.Font, text string, color sdl.Color) *StringTexture {
-	surface, err := font.RenderUTF8BlendedWrapped(text, color, 0)
+	w, _ := SizeString(font, text)
+	surface, err := font.RenderUTF8BlendedWrapped(text, color, w)
 	if err != nil {
 		panic(err)
 	}

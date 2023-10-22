@@ -36,7 +36,14 @@ func NewTextParagraph(
 func (par TextParagraph) GetBBox() *sdl.Rect {
 	w, h := int32(par.Font.Height()), int32(par.Font.Height())
 	if par.StringTexture != nil {
-		w, h = par.StringTexture.TextWidth, par.StringTexture.TextHeight
+		h = par.StringTexture.TextHeight
+		lines := par.GetLinesBoundaries()
+		for _, line := range lines {
+			lineW, _ := SizeString(par.Font, string(par.Text[line[0]:line[1]]))
+			if int32(lineW) > w {
+				w = int32(lineW)
+			}
+		}
 	}
 	if len(par.Text) > 0 && par.Text[len(par.Text)-1] == '\n' {
 		h += int32(par.Font.Height())

@@ -239,9 +239,10 @@ func (tooltip *selectionSizeTooltip) destroy() {
 }
 
 type selectionActionsTooltip struct {
-	actions     []*tooltipAction
-	bbox        sdl.Rect
-	inSelection bool
+	actions          []*tooltipAction
+	actionsAvailable bool
+	bbox             sdl.Rect
+	inSelection      bool
 }
 
 func NewSelectionActionsTooltip(ren *sdl.Renderer, saveCallback, copyCallback, searchCallback func()) *selectionActionsTooltip {
@@ -251,6 +252,7 @@ func NewSelectionActionsTooltip(ren *sdl.Renderer, saveCallback, copyCallback, s
 			{texture: pkg.CreateTextureFromSurface(ren, assets.CopyIcon), callback: copyCallback},
 			{texture: pkg.CreateTextureFromSurface(ren, assets.SaveIcon), callback: saveCallback},
 		},
+		actionsAvailable: true,
 	}
 
 	vp := ren.GetViewport()
@@ -263,6 +265,10 @@ func NewSelectionActionsTooltip(ren *sdl.Renderer, saveCallback, copyCallback, s
 }
 
 func (tooltip *selectionActionsTooltip) updateTooltip(selection *sdl.Rect) {
+	tooltip.actionsAvailable = true
+	if selection.W == 0 || selection.H == 0 {
+		tooltip.actionsAvailable = false
+	}
 	tooltip.bbox.X = selection.X + selection.W - tooltip.bbox.W
 	if selection.W < 0 {
 		tooltip.bbox.X = selection.X - tooltip.bbox.W
@@ -303,11 +309,19 @@ func (tooltip *selectionActionsTooltip) draw(ren *sdl.Renderer) {
 		selectionTooltipBackgroundColor,
 	)
 	for _, action := range tooltip.actions {
+		if !tooltip.actionsAvailable {
+			action.texture.SetColorMod(150, 150, 150)
+		} else {
+			action.texture.SetColorMod(255, 255, 255)
+		}
 		pkg.CopyTexture(ren, action.texture, &action.bbox, nil)
 	}
 }
 
 func (tooltip selectionActionsTooltip) getActionAt(x, y int32) (*tooltipAction, bool) {
+	if !tooltip.actionsAvailable {
+		return nil, false
+	}
 	point := sdl.Point{X: x, Y: y}
 	for _, action := range tooltip.actions {
 		if point.InRect(&action.bbox) {

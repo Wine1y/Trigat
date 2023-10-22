@@ -1,6 +1,8 @@
 package scWindow
 
 import (
+	"time"
+
 	"github.com/Wine1y/trigat/internal/gui"
 	editTools "github.com/Wine1y/trigat/internal/gui/sc_window/edit_tools"
 	"github.com/Wine1y/trigat/pkg"
@@ -21,7 +23,7 @@ const toolColorHeight int32 = 2
 const toolColorPadding int32 = 6
 
 const settingsWidth int32 = 100
-const settingsShowDelayMs uint64 = 650
+const settingsShowDelay time.Duration = time.Millisecond * 650
 
 var panelBackgroundColor = sdl.Color{R: 115, G: 115, B: 115, A: 150}
 var panelActiveToolColor = sdl.Color{R: 255, G: 255, B: 255, A: 255}
@@ -32,7 +34,7 @@ type ToolsPanel struct {
 	tools             []*toolMeta
 	currentTool       *toolMeta
 	hoveredTool       *toolMeta
-	hoveredAt         uint64
+	hoveredAt         time.Time
 	cropTool          editTools.ScreenshotCropTool
 	actionsQueue      *editTools.ActionsQueue
 	onNewToolSelected func(tool editTools.ScreenshotEditTool)
@@ -115,7 +117,7 @@ func (panel ToolsPanel) DrawPanel(ren *sdl.Renderer) {
 		if meta == panel.hoveredTool {
 			pkg.DrawRoundedFilledRectangle(ren, &meta.toolBBox, panelRoundingRadius, panelHoverToolColor)
 			toolSettings := panel.hoveredTool.tool.ToolSettings()
-			if len(toolSettings) > 0 && sdl.GetTicks64()-panel.hoveredAt >= settingsShowDelayMs {
+			if len(toolSettings) > 0 && time.Since(panel.hoveredAt) >= settingsShowDelay {
 				for _, setting := range toolSettings {
 					setting.Render(ren)
 				}
@@ -152,7 +154,7 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 				panel.setActiveTool(meta)
 				return true
 			}
-			if panel.hoveredTool == meta && sdl.GetTicks64()-panel.hoveredAt >= settingsShowDelayMs {
+			if panel.hoveredTool == meta && time.Since(panel.hoveredAt) >= settingsShowDelay {
 				if click.InRect(&panel.hoveredTool.settingsBBox) && button == sdl.BUTTON_LEFT {
 					panel.setActiveTool(meta)
 				}
@@ -165,7 +167,7 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 		for _, meta := range panel.tools {
 			if move.InRect(&meta.toolBBox) {
 				if panel.hoveredTool != meta {
-					panel.hoveredAt = sdl.GetTicks64()
+					panel.hoveredAt = time.Now()
 				}
 				panel.hoveredTool = meta
 				sdl.SetCursor(gui.HandCursor)
@@ -177,7 +179,7 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 			if panel.handCursorSet {
 				sdl.SetCursor(gui.ArrowCursor)
 			}
-			if move.InRect(&panel.hoveredTool.settingsBBox) && sdl.GetTicks64()-panel.hoveredAt >= settingsShowDelayMs {
+			if move.InRect(&panel.hoveredTool.settingsBBox) && time.Since(panel.hoveredAt) >= settingsShowDelay {
 				return false
 			}
 			panel.hoveredTool = nil
@@ -206,7 +208,7 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 		return false
 	})
 
-	if panel.hoveredTool != nil && sdl.GetTicks64()-panel.hoveredAt >= settingsShowDelayMs {
+	if panel.hoveredTool != nil && time.Since(panel.hoveredAt) >= settingsShowDelay {
 		for _, setting := range panel.hoveredTool.tool.ToolSettings() {
 			callbacks.Append(setting.SettingCallbacks())
 		}
