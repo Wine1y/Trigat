@@ -9,26 +9,28 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-const iconSize int32 = 38
-const iconPadding int32 = 16
-const iconMargin int32 = 10
+const panelIconSize int32 = 38
+const panelIconPadding int32 = 16
+const panelIconMargin int32 = 10
 const panelPadding int32 = 6
 const panelSeparatorWidth int32 = 1
+const panelToolColorOutlineWidth int32 = 1
 
 const panelTopMargin int32 = 20
 const panelRoundingRadius int32 = 8
-const toolSize int32 = iconSize + (iconPadding * 2)
-const toolColorWidth int32 = toolSize / 4 * 3
-const toolColorHeight int32 = 2
-const toolColorPadding int32 = 6
+const panelToolSize int32 = panelIconSize + (panelIconPadding * 2)
+const panelToolColorWidth int32 = panelToolSize / 4 * 3
+const panelToolColorHeight int32 = 3
+const panelToolColorPadding int32 = 6
 
-const settingsWidth int32 = 100
-const settingsShowDelay time.Duration = time.Millisecond * 650
+const panelSettingsWidth int32 = 100
+const panelSettingsShowDelay time.Duration = time.Millisecond * 650
 
 var panelBackgroundColor = sdl.Color{R: 115, G: 115, B: 115, A: 150}
 var panelActiveToolColor = sdl.Color{R: 255, G: 255, B: 255, A: 255}
 var panelHoverToolColor = sdl.Color{R: 100, G: 100, B: 100, A: 200}
 var panelSeparatorColor = sdl.Color{R: 170, G: 170, B: 170, A: 255}
+var panelToolColorOutlineColor = sdl.Color{R: 0, G: 0, B: 0, A: 40}
 
 type ToolsPanel struct {
 	tools             []*toolMeta
@@ -113,37 +115,50 @@ func (panel *ToolsPanel) RedoLastAction() {
 func (panel ToolsPanel) DrawPanel(ren *sdl.Renderer) {
 	pkg.DrawRoundedFilledRectangle(ren, panel.panelRect, panelRoundingRadius, panelBackgroundColor)
 	for i, meta := range panel.tools {
-		meta.texture.SetColorMod(255, 255, 255)
-		if meta == panel.hoveredTool {
-			pkg.DrawRoundedFilledRectangle(ren, &meta.toolBBox, panelRoundingRadius, panelHoverToolColor)
-			toolSettings := panel.hoveredTool.tool.ToolSettings()
-			if len(toolSettings) > 0 && time.Since(panel.hoveredAt) >= settingsShowDelay {
-				for _, setting := range toolSettings {
-					setting.Render(ren)
-				}
-			}
-		}
-		if meta == panel.currentTool {
-			pkg.DrawRoundedFilledRectangle(ren, &meta.toolBBox, panelRoundingRadius, panelActiveToolColor)
-			meta.texture.SetColorMod(0, 0, 0)
-		}
-		if toolColor := meta.tool.ToolColor(); toolColor != nil {
-			pkg.DrawFilledRectangle(
-				ren,
-				meta.colorBBox,
-				*toolColor,
-			)
-		}
+		panel.drawTool(ren, meta)
 		if i != len(panel.tools)-1 {
 			pkg.DrawThickLine(
 				ren,
-				&sdl.Point{X: meta.toolBBox.X + meta.toolBBox.W + (iconMargin / 2), Y: meta.toolBBox.Y + iconPadding},
-				&sdl.Point{X: meta.toolBBox.X + meta.toolBBox.W + (iconMargin / 2), Y: meta.toolBBox.Y + meta.toolBBox.H - iconPadding},
+				&sdl.Point{X: meta.toolBBox.X + meta.toolBBox.W + (panelIconMargin / 2), Y: meta.toolBBox.Y + panelIconPadding},
+				&sdl.Point{X: meta.toolBBox.X + meta.toolBBox.W + (panelIconMargin / 2), Y: meta.toolBBox.Y + meta.toolBBox.H - panelIconPadding},
 				panelSeparatorWidth, panelSeparatorColor,
 			)
 		}
-		pkg.CopyTexture(ren, meta.texture, &meta.iconBBox, nil)
 	}
+}
+
+func (panel *ToolsPanel) drawTool(ren *sdl.Renderer, meta *toolMeta) {
+	meta.texture.SetColorMod(255, 255, 255)
+	if meta == panel.hoveredTool {
+		pkg.DrawRoundedFilledRectangle(ren, &meta.toolBBox, panelRoundingRadius, panelHoverToolColor)
+		toolSettings := panel.hoveredTool.tool.ToolSettings()
+		if len(toolSettings) > 0 && time.Since(panel.hoveredAt) >= panelSettingsShowDelay {
+			for _, setting := range toolSettings {
+				setting.Render(ren)
+			}
+		}
+	}
+	if meta == panel.currentTool {
+		pkg.DrawRoundedFilledRectangle(ren, &meta.toolBBox, panelRoundingRadius, panelActiveToolColor)
+		meta.texture.SetColorMod(0, 0, 0)
+	}
+	if toolColor := meta.tool.ToolColor(); toolColor != nil {
+		pkg.DrawFilledRectangle(
+			ren,
+			meta.colorBBox,
+			*toolColor,
+		)
+		pkg.DrawThickRectangle(
+			ren,
+			&sdl.Rect{
+				X: meta.colorBBox.X - 1, Y: meta.colorBBox.Y - 1,
+				W: meta.colorBBox.W + 2, H: meta.colorBBox.H + 2,
+			},
+			panelToolColorOutlineWidth,
+			panelToolColorOutlineColor,
+		)
+	}
+	pkg.CopyTexture(ren, meta.texture, &meta.iconBBox, nil)
 }
 
 func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
@@ -154,7 +169,7 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 				panel.setActiveTool(meta)
 				return true
 			}
-			if panel.hoveredTool == meta && time.Since(panel.hoveredAt) >= settingsShowDelay {
+			if panel.hoveredTool == meta && time.Since(panel.hoveredAt) >= panelSettingsShowDelay {
 				if click.InRect(&panel.hoveredTool.settingsBBox) && button == sdl.BUTTON_LEFT {
 					panel.setActiveTool(meta)
 				}
@@ -179,7 +194,7 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 			if panel.handCursorSet {
 				sdl.SetCursor(gui.ArrowCursor)
 			}
-			if move.InRect(&panel.hoveredTool.settingsBBox) && time.Since(panel.hoveredAt) >= settingsShowDelay {
+			if move.InRect(&panel.hoveredTool.settingsBBox) && time.Since(panel.hoveredAt) >= panelSettingsShowDelay {
 				return false
 			}
 			panel.hoveredTool = nil
@@ -208,7 +223,7 @@ func (panel *ToolsPanel) SetToolsCallbacks(callbacks *gui.WindowCallbackSet) {
 		return false
 	})
 
-	if panel.hoveredTool != nil && time.Since(panel.hoveredAt) >= settingsShowDelay {
+	if panel.hoveredTool != nil && time.Since(panel.hoveredAt) >= panelSettingsShowDelay {
 		for _, setting := range panel.hoveredTool.tool.ToolSettings() {
 			callbacks.Append(setting.SettingCallbacks())
 		}
@@ -228,42 +243,42 @@ func (panel *ToolsPanel) setActiveTool(toolMeta *toolMeta) {
 }
 
 func (panel *ToolsPanel) resizePanel(viewportW, viewportH int32) {
-	panelWidth := (toolSize * int32(len(panel.tools))) + (iconMargin * int32(len(panel.tools)-1)) + (panelPadding * 2)
+	panelWidth := (panelToolSize * int32(len(panel.tools))) + (panelIconMargin * int32(len(panel.tools)-1)) + (panelPadding * 2)
 	panelRect := sdl.Rect{
 		X: (viewportW - panelWidth) / 2, Y: panelTopMargin,
-		W: panelWidth, H: toolSize + (panelPadding * 2),
+		W: panelWidth, H: panelToolSize + (panelPadding * 2),
 	}
 	panel.panelRect = &panelRect
 	for i, meta := range panel.tools {
 		meta.iconBBox = sdl.Rect{
-			X: panelRect.X + panelPadding + iconPadding + ((iconMargin + toolSize) * int32(i)),
-			Y: panelRect.Y + panelPadding + iconPadding,
-			W: iconSize,
-			H: iconSize,
+			X: panelRect.X + panelPadding + panelIconPadding + ((panelIconMargin + panelToolSize) * int32(i)),
+			Y: panelRect.Y + panelPadding + panelIconPadding,
+			W: panelIconSize,
+			H: panelIconSize,
 		}
 		meta.toolBBox = sdl.Rect{
-			X: meta.iconBBox.X - iconPadding,
-			Y: meta.iconBBox.Y - iconPadding,
-			W: toolSize, H: toolSize,
+			X: meta.iconBBox.X - panelIconPadding,
+			Y: meta.iconBBox.Y - panelIconPadding,
+			W: panelToolSize, H: panelToolSize,
 		}
 		meta.colorBBox = &sdl.Rect{
-			X: meta.toolBBox.X + (meta.toolBBox.W-toolColorWidth)/2,
-			Y: meta.toolBBox.Y + meta.toolBBox.H - toolColorHeight - toolColorPadding,
-			W: toolColorWidth, H: toolColorHeight,
+			X: meta.toolBBox.X + (meta.toolBBox.W-panelToolColorWidth)/2,
+			Y: meta.toolBBox.Y + meta.toolBBox.H - panelToolColorHeight - panelToolColorPadding,
+			W: panelToolColorWidth, H: panelToolColorHeight,
 		}
 		var toolSettingsH int32 = 0
 		for _, setting := range meta.tool.ToolSettings() {
 			setting.SetLeftTop(&sdl.Point{
-				X: meta.toolBBox.X - (settingsWidth-meta.toolBBox.W)/2,
+				X: meta.toolBBox.X - (panelSettingsWidth-meta.toolBBox.W)/2,
 				Y: meta.toolBBox.Y + meta.toolBBox.H + panelPadding + toolSettingsH,
 			})
-			setting.SetWidth(settingsWidth)
+			setting.SetWidth(panelSettingsWidth)
 			toolSettingsH += setting.BBox().H
 		}
 		meta.settingsBBox = sdl.Rect{
-			X: meta.toolBBox.X - (settingsWidth-meta.toolBBox.W)/2,
+			X: meta.toolBBox.X - (panelSettingsWidth-meta.toolBBox.W)/2,
 			Y: meta.toolBBox.Y + meta.toolBBox.H,
-			W: settingsWidth, H: toolSettingsH,
+			W: panelSettingsWidth, H: toolSettingsH,
 		}
 	}
 }

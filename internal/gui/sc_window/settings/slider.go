@@ -9,13 +9,13 @@ import (
 )
 
 const sliderHeight int32 = 30
-const trackRadius int32 = 5
+const trackRadius int32 = 6
 const trackHeight int32 = 8
 const thumbHeight int32 = 16
 
 var trackColor = sdl.Color{R: 255, G: 255, B: 255, A: 255}
-var thumbFillColor = sdl.Color{R: 0, G: 0, B: 255, A: 255}
-var thumbOutlineColor = sdl.Color{R: 0, G: 0, B: 0, A: 255}
+var thumbFillColor = sdl.Color{R: 245, G: 245, B: 245, A: 255}
+var thumbOutlineColor = sdl.Color{R: 0, G: 0, B: 0, A: 100}
 
 type SliderSetting struct {
 	*DefaultSetting
@@ -61,8 +61,6 @@ func (setting SliderSetting) Render(ren *sdl.Renderer) {
 		thumbHeight/2,
 		thumbOutlineColor,
 	)
-
-	pkg.DrawThickRectangle(ren, &setting.bbox, 1, sdl.Color{R: 0, G: 0, B: 255, A: 255})
 }
 
 func (setting *SliderSetting) SettingCallbacks() *gui.WindowCallbackSet {

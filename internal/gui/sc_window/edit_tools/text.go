@@ -15,7 +15,8 @@ import (
 )
 
 var cursorColor = sdl.Color{R: 255, G: 255, B: 255, A: 255}
-var selectionColor = sdl.Color{R: 0, G: 0, B: 255, A: 100}
+var selectionColor = sdl.Color{R: 0, G: 0, B: 0, A: 100}
+var paragraphBoundariesColor = sdl.Color{R: 255, G: 255, B: 255, A: 255}
 
 const paragraphPadding int32 = 5
 const paragraphDraggingPadding int32 = 5
@@ -374,7 +375,7 @@ func (tool TextTool) RenderCurrentState(ren *sdl.Renderer) {
 		pkg.DrawRectangle(
 			ren,
 			par.GetBBox(),
-			sdl.Color{R: 0, G: 255, B: 0, A: 255},
+			paragraphBoundariesColor,
 		)
 		if par.StringTexture != nil {
 			par.StringTexture.Draw(ren, &par.TextStart)

@@ -74,7 +74,6 @@ func (setting *ColorPickerSetting) Render(ren *sdl.Renderer) {
 		pickerThumbThickness,
 		pickerThumbColor,
 	)
-	pkg.DrawThickRectangle(ren, &setting.bbox, 1, sdl.Color{R: 0, G: 255, B: 0, A: 255})
 }
 
 func (setting *ColorPickerSetting) SettingCallbacks() *gui.WindowCallbackSet {
