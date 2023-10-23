@@ -61,7 +61,7 @@ func (app *App) startSystemTray() {
 }
 
 func (app *App) onTrayStart() {
-	systray.SetIcon(assets.TrigatIconData)
+	systray.SetIcon(assets.TrayIconData)
 	systray.SetTooltip("Trigat")
 	exitItem := systray.AddMenuItem("Exit", "Close the app")
 	go func() {
