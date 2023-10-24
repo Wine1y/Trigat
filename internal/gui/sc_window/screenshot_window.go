@@ -17,7 +17,6 @@ import (
 	"github.com/kbinani/screenshot"
 	"github.com/veandco/go-sdl2/sdl"
 	"golang.design/x/clipboard"
-	hk "golang.design/x/hotkey"
 )
 
 const windowFlags uint32 = sdl.WINDOW_SKIP_TASKBAR | sdl.WINDOW_BORDERLESS | sdl.WINDOW_HIDDEN
@@ -138,7 +137,7 @@ func (window *ScreenshotWindow) callbackSet() *gui.WindowCallbackSet {
 
 func (window *ScreenshotWindow) HotKeys() *hotkeys.HotKeySet {
 	exitCb := func() { window.Close() }
-	exitHk := hotkeys.NewHotKey(hk.KeyEscape, nil, &exitCb, nil)
+	exitHk := hotkeys.NewHotKey(hotkeys.KeyEscape, nil, &exitCb, nil)
 	return hotkeys.NewHotKeySet(exitHk)
 }
 
