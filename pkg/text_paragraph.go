@@ -130,6 +130,7 @@ func (par TextParagraph) GetOffsetByPosition(position int) (int32, int32) {
 
 func (par TextParagraph) GetPositionByOffset(xOffset int32, yOffset int32) int {
 	lineNumber := int(math.Floor(float64(yOffset) / float64(par.Font.LineSkip())))
+	lineNumber = Max(0, lineNumber)
 	lines := par.GetLinesBoundaries()
 	if lineNumber >= len(lines) {
 		return len(par.Text)
