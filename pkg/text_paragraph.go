@@ -89,7 +89,7 @@ func (par TextParagraph) GetLineNumber(position int) int {
 			return i
 		}
 	}
-	panic(fmt.Sprintf("Invalid positon %v, can't determine line number for lines: %v.", position, lines))
+	panic(fmt.Sprintf("Invalid position %v, can't determine line number for lines: %v.", position, lines))
 }
 
 func (par *TextParagraph) InsertRunes(ren *sdl.Renderer, pos int, runes ...rune) {
