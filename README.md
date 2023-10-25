@@ -1,3 +1,5 @@
+[![Build](https://github.com/Wine1y/Trigat/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/Wine1y/Trigat/actions/workflows/go.yml)
+[![Report Card](https://goreportcard.com/badge/github.com/Wine1y/trigat)](https://goreportcard.com/report/github.com/Wine1y/trigat)
 <img src="winres/icon256.png" align="right"/>
 
 # Trigat 
